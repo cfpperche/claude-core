@@ -7,7 +7,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const siteUrl = "https://cfpperche.github.io";
 const CC_VERSION = "2.1.143";
 const pageTitle = `claude-core · Aprende Claude Code`;
-const pageDesc = `Cuatro recursos gratuitos para aprender Claude Code v${CC_VERSION}: un cheatsheet denso, una Master Class de 12 módulos, una inmersión profunda de 8 módulos en el comando /goal, y un Hook Cookbook con 10 recetas listas para producción.`;
+const pageDesc = `Cinco recursos gratuitos para aprender Claude Code v${CC_VERSION}: un cheatsheet denso, una Master Class de 12 módulos, una inmersión de 8 módulos en /goal, un Hook Cookbook con 10 recetas, y una Routing Class que cubre CCRouter (extender la capa de modelo).`;
 ---
 
 <!doctype html>
@@ -42,14 +42,14 @@ const pageDesc = `Cuatro recursos gratuitos para aprender Claude Code v${CC_VERS
         <div class="ix-strip">
           <span class="ix-tag">▮ CLAUDE-CORE</span>
           <span class="ix-tag">CLAUDE CODE v{CC_VERSION}</span>
-          <span class="ix-tag">CUATRO RECURSOS GRATUITOS ▮</span>
+          <span class="ix-tag">CINCO RECURSOS GRATUITOS ▮</span>
         </div>
         <h1 class="ix-title">
           <span class="ix-title-line">UNA BASE</span>
           <span class="ix-title-line ix-title-accent">PARA APRENDER CLAUDE CODE</span>
         </h1>
         <p class="ix-sub">
-          Cuatro recursos gratuitos para profundizar en el agente de código nativo de terminal de Anthropic. Elige según tu momento — referencia, recorrido guiado, inmersión profunda o recetas copia-y-pega.
+          Cinco recursos gratuitos para profundizar en el agente de código nativo de terminal de Anthropic. Elige según tu momento — referencia, recorrido guiado, inmersiones profundas o recetas copia-y-pega.
         </p>
       </header>
 
@@ -111,12 +111,26 @@ const pageDesc = `Cuatro recursos gratuitos para aprender Claude Code v${CC_VERS
           </div>
         </a>
 
+        <a href={`${base}/masterclass/es/routing/`} class="ix-card ix-card-violet">
+          <div class="ix-card-head">
+            <span class="ix-card-n">04</span>
+            <h2 class="ix-card-h">Routing Class</h2>
+            <span class="ix-card-arr" aria-hidden="true">↗</span>
+          </div>
+          <p class="ix-card-desc">
+            Extiende Claude Code con <b>CCRouter</b> — el proxy local que enruta las peticiones a cualquier modelo por tipo de tarea. 4 módulos de teoría + 8 configs de enrutamiento copia-pega (división de costos, failover, contexto largo, Ollama).
+          </p>
+          <div class="ix-card-meta">
+            <span>4 mods + 8 recetas</span><span>·</span><span>~25 min</span><span>·</span><span>imprimible</span>
+          </div>
+        </a>
+
       </section>
 
       <section class="ix-about">
         <h2 class="ix-about-h">Qué es esto</h2>
         <p>
-          Cuatro recursos independientes, diseñados para componer. El cheatsheet es la referencia densa — siempre a un Ctrl+F de distancia. La Master Class es el camino lineal para los novatos. La /goal Class y el Hook Cookbook son inmersiones en superficies específicas. Cada página tiene un menú desplegable <code>Recursos ▾</code> para saltar entre ellas en cualquier momento.
+          Cinco recursos independientes, diseñados para componer. El cheatsheet es la referencia densa — siempre a un Ctrl+F de distancia. La Master Class es el camino lineal para los novatos. La /goal Class, el Hook Cookbook y la Routing Class son inmersiones en superficies específicas. Cada página tiene un menú desplegable <code>Recursos ▾</code> para saltar entre ellas en cualquier momento.
         </p>
         <p>
           Todo es HTML estático. Sin tracking, sin analytics, sin framework JS. Construido con Astro, alojado en GitHub Pages. Código en <a href={REPO_URL} target="_blank" rel="noopener">github/cfpperche/claude-core</a>. Licencia MIT — clónalo, adáptalo, lanza tu propia versión.
@@ -235,6 +249,7 @@ const pageDesc = `Cuatro recursos gratuitos para aprender Claude Code v${CC_VERS
       .ix-card-magenta { --ix-c: var(--p-magenta); }
       .ix-card-cyan    { --ix-c: var(--p-cyan); }
       .ix-card-yellow  { --ix-c: var(--p-yellow); }
+      .ix-card-violet  { --ix-c: var(--p-violet); }
 
       .ix-card-head {
         display: flex;

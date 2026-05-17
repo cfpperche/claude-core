@@ -1,11 +1,11 @@
 ---
 // ResourcesMenu — single source of truth for cross-page nav across the
-// Claude Code learning surface (cheatsheet · master class · /goal class · cookbook).
+// Claude Code learning surface (cheatsheet · master class · /goal class · cookbook · routing).
 //
 // Add a new surface? Add a row to RESOURCES below and a slug to CurrentPage.
 // Every page that imports this component picks it up automatically.
 
-export type CurrentPage = "cheatsheet" | "masterclass" | "goal" | "cookbook";
+export type CurrentPage = "cheatsheet" | "masterclass" | "goal" | "cookbook" | "routing";
 
 interface Props {
   current: CurrentPage;
@@ -16,7 +16,7 @@ interface Props {
 const { current, locale = "en" } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-// Per-surface locale routing. All four surfaces have EN at root path and
+// Per-surface locale routing. All surfaces have EN at root path and
 // PT/ES at /<surface>/<locale>/<page>/.
 const localeSegment = locale === "en" ? "" : `/${locale}`;
 
@@ -24,6 +24,7 @@ const cheatsheetHref  = `${base}/cheatsheet${localeSegment}/claude-core/`;
 const masterclassHref = `${base}/masterclass${localeSegment}/claude-code/`;
 const goalHref        = `${base}/masterclass${localeSegment}/goal-command/`;
 const cookbookHref    = `${base}/cookbook${localeSegment}/hooks/`;
+const routingHref     = `${base}/masterclass${localeSegment}/routing/`;
 
 // Per-locale UI copy. Resources label + per-card title/desc.
 type LocaleCopy = {
@@ -32,6 +33,7 @@ type LocaleCopy = {
   masterclass: { title: string; desc: string };
   goal: { title: string; desc: string };
   cookbook: { title: string; desc: string };
+  routing: { title: string; desc: string };
   youAreHere: string;
 };
 
@@ -42,6 +44,7 @@ const COPY: Record<"en" | "pt" | "es", LocaleCopy> = {
     masterclass: { title: "Master Class",   desc: "12-module guided walkthrough · ~60 min" },
     goal:        { title: "/goal Class",    desc: "Deep dive on /goal · worker vs evaluator" },
     cookbook:    { title: "Hook Cookbook",  desc: "10 production-ready hook recipes" },
+    routing:     { title: "Routing Class",  desc: "CCRouter · extend the model layer · 4 mods + 8 recipes" },
     youAreHere:  " · you are here",
   },
   pt: {
@@ -50,6 +53,7 @@ const COPY: Record<"en" | "pt" | "es", LocaleCopy> = {
     masterclass: { title: "Master Class",   desc: "Tour guiado de 12 módulos · ~60 min" },
     goal:        { title: "/goal Class",    desc: "Aprofundamento em /goal · worker vs evaluator" },
     cookbook:    { title: "Hook Cookbook",  desc: "10 receitas de hooks prontas pra produção" },
+    routing:     { title: "Routing Class",  desc: "CCRouter · estendendo a camada de modelo · 4 mods + 8 receitas" },
     youAreHere:  " · você está aqui",
   },
   es: {
@@ -58,6 +62,7 @@ const COPY: Record<"en" | "pt" | "es", LocaleCopy> = {
     masterclass: { title: "Master Class",   desc: "Recorrido guiado de 12 módulos · ~60 min" },
     goal:        { title: "/goal Class",    desc: "Inmersión en /goal · worker vs evaluator" },
     cookbook:    { title: "Hook Cookbook",  desc: "10 recetas de hooks listas para producción" },
+    routing:     { title: "Routing Class",  desc: "CCRouter · extiende la capa de modelo · 4 mods + 8 recetas" },
     youAreHere:  " · estás aquí",
   },
 };
@@ -75,6 +80,7 @@ const RESOURCES: {
   { slug: "masterclass", num: "01", title: t.masterclass.title, desc: t.masterclass.desc, href: masterclassHref },
   { slug: "goal",        num: "02", title: t.goal.title,        desc: t.goal.desc,        href: goalHref        },
   { slug: "cookbook",    num: "03", title: t.cookbook.title,    desc: t.cookbook.desc,    href: cookbookHref    },
+  { slug: "routing",     num: "04", title: t.routing.title,     desc: t.routing.desc,     href: routingHref     },
 ];
 ---
 
