@@ -1,0 +1,833 @@
+---
+import "../../../styles/global.css";
+import { REPO_URL } from "../../../i18n/locales";
+import ResourcesMenu from "../../../components/ResourcesMenu.astro";
+import LanguageSwitcher from "../../../components/LanguageSwitcher.astro";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const siteUrl = "https://cfpperche.github.io";
+const CC_VERSION = "2.1.143";
+const pageTitle = `Claude Code · Hook Cookbook · v${CC_VERSION} (pt-BR)`;
+const pageDesc = `Receitas de hook prontas pra produção para Claude Code v${CC_VERSION}: 10 exemplos cobrindo as 7 famílias de eventos de ciclo de vida. Copia, cola, customiza.`;
+
+const cheatsheetPath = `${base}/cheatsheet/pt/claude-core/`;
+const masterclassPath = `${base}/masterclass/pt/claude-code/`;
+
+type Family =
+  | "session"
+  | "prompt"
+  | "tool-gate"
+  | "permission"
+  | "subagent"
+  | "compaction";
+
+const families: Record<Family, { label: string; color: string }> = {
+  session:     { label: "ciclo de vida da sessão", color: "cyan"    },
+  prompt:      { label: "prompts & instruções",    color: "magenta" },
+  "tool-gate": { label: "portões de ferramenta",   color: "orange"  },
+  permission:  { label: "permissão",                color: "green"   },
+  subagent:    { label: "sub-agents & tasks",       color: "violet"  },
+  compaction:  { label: "compaction",               color: "yellow"  },
+};
+
+const recipes: {
+  n: number;
+  slug: string;
+  family: Family;
+  event: string;
+  title: string;
+}[] = [
+  { n: 1,  slug: "session-start-context",   family: "session",    event: "SessionStart",      title: "Injetar CHANGELOG + estado não comitado no início da sessão" },
+  { n: 2,  slug: "stop-handoff-guard",       family: "session",    event: "Stop",              title: "Bloquear saída se SESSION.md está desatualizado com WIP" },
+  { n: 3,  slug: "userprompt-pr-expansion",  family: "prompt",     event: "UserPromptSubmit",  title: "Auto-expandir @PR/123 pro diff buscado do PR" },
+  { n: 4,  slug: "instructions-loaded-trace", family: "prompt",    event: "InstructionsLoaded", title: "Logar qual CLAUDE.md / regra carregou quando (debug)" },
+  { n: 5,  slug: "pre-bash-deny",            family: "tool-gate",  event: "PreToolUse(Bash)",  title: "Bloquear formas destrutivas de shell (rm -rf, force push, …)" },
+  { n: 6,  slug: "pre-agent-five-field",     family: "tool-gate",  event: "PreToolUse(Agent)", title: "Exigir handoff de delegação com 5 campos (TASK / CONTEXT / …)" },
+  { n: 7,  slug: "post-edit-format",         family: "tool-gate",  event: "PostToolUse(Edit)", title: "Rodar prettier --check em todo arquivo tocado" },
+  { n: 8,  slug: "permission-denied-hint",   family: "permission", event: "PermissionDenied",  title: "Sugerir alternativa quando o usuário nega uma tool" },
+  { n: 9,  slug: "subagent-verify-deliverable", family: "subagent", event: "SubagentStop",     title: "Verificar se o deliverable que o sub-agent disse ter feito existe" },
+  { n: 10, slug: "pre-compact-snapshot",     family: "compaction", event: "PreCompact",        title: "Snapshot dos últimos 12 turnos antes da sumarização" },
+];
+---
+
+<!doctype html>
+<html lang="pt-BR" data-theme="poster">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDesc} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDesc} />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content={`${siteUrl}${base}/cookbook/pt/hooks/`} />
+    <meta property="og:locale" content="pt_BR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+  </head>
+  <body class="ck-body">
+
+    <div class="ck-top">
+      <a href={`${base}/pt/`} class="ck-back">← claude-core</a>
+      <ResourcesMenu current="cookbook" locale="pt" />
+      <div class="ck-top-tools">
+        <LanguageSwitcher
+          enHref={`${base}/cookbook/hooks/`}
+          ptHref={`${base}/cookbook/pt/hooks/`}
+          esHref={`${base}/cookbook/es/hooks/`}
+          current="pt"
+        />
+        <button id="ck-print" type="button" class="ck-tool-btn" title="Imprimir como PDF (usa PDF do navegador)">
+          <span aria-hidden="true">↓</span> PDF
+        </button>
+      </div>
+    </div>
+
+    <main class="ck-page">
+
+      <header class="ck-banner">
+        <div class="ck-strip">
+          <span class="ck-tag">▮ CLAUDE-CORE · ACADEMY</span>
+          <span class="ck-tag">CLAUDE CODE v{CC_VERSION}</span>
+          <span class="ck-tag">10 RECEITAS · 7 FAMÍLIAS ▮</span>
+        </div>
+        <h1 class="ck-title">
+          <span class="ck-title-line">HOOK</span>
+          <span class="ck-title-line ck-title-accent">COOKBOOK</span>
+        </h1>
+        <p class="ck-sub">
+          Dez receitas de hook prontas pra produção — uma por necessidade real, cobrindo as sete famílias de eventos de ciclo de vida. Copia, cola, customiza. Cada receita tem &lt;20 linhas de bash.
+        </p>
+      </header>
+
+      <section class="ck-intro">
+        <h2 class="ck-intro-h">O que é um hook, em 30 segundos</h2>
+        <p>
+          Um hook é um script de shell que o Claude Code roda em um evento específico do ciclo de vida. Ele lê um payload JSON do stdin, decide via exit code (<code>0</code> = permite, <code>2</code> em evento Pre* = <b>BLOQUEIA</b> com stderr mostrado pro agent, qualquer outro = só loga), e opcionalmente escreve <code>additionalContext</code> no stdout pro agent consumir.
+        </p>
+        <h2 class="ck-intro-h">Anatomia de uma receita</h2>
+        <ul class="ck-intro-ul">
+          <li><b>Quando</b> — o cenário real onde essa receita compensa.</li>
+          <li><b>Payload</b> — JSON de exemplo que o hook recebe no stdin.</li>
+          <li><b>Script</b> — o bash de verdade. Curto. Real.</li>
+          <li><b>Configuração</b> — o fragmento de <code>settings.json</code>.</li>
+          <li><b>Pegadinha</b> — a coisa que pegou alguém.</li>
+        </ul>
+      </section>
+
+      <nav class="ck-filters" aria-label="Filtrar por família">
+        <span class="ck-filter-h">▸ FILTRAR POR FAMÍLIA</span>
+        <button type="button" class="ck-filter ck-filter-all" data-family="all" aria-pressed="true">tudo (10)</button>
+        {Object.entries(families).map(([key, meta]) => {
+          const count = recipes.filter((r) => r.family === key).length;
+          return (
+            <button type="button" class={`ck-filter ck-filter-${meta.color}`} data-family={key} aria-pressed="false">
+              {meta.label} ({count})
+            </button>
+          );
+        })}
+      </nav>
+
+      <!-- ===== RECEITAS ===== -->
+
+      <!-- §1 SessionStart -->
+      <article id="r1" class="ck-recipe ck-fam-cyan" data-family="session">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§1</span>
+          <h2 class="ck-rec-h">Injetar CHANGELOG + estado não comitado no início da sessão</h2>
+          <span class="ck-rec-event"><code>SessionStart</code></span>
+        </header>
+        <p class="ck-when"><b>Quando</b> — Claude abre uma sessão e o usuário quer as últimas notas de release e o estado atual do git apresentados automaticamente, em vez de perguntar "o que mudou?" toda vez.</p>
+
+        <p class="ck-mini-h">▸ Payload (stdin)</p>
+        <pre><code>{`{
+  "session_id": "abc-123",
+  "hook_event_name": "SessionStart",
+  "source": "startup",                  // startup | resume | clear | compact
+  "transcript_path": "/.../transcript.jsonl",
+  "cwd": "/home/user/project"
+}`}</code></pre>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/session-start.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+{
+  echo "=== CHANGELOG (latest) ==="
+  head -n 40 CHANGELOG.md 2>/dev/null || echo "(no CHANGELOG.md)"
+  echo
+  echo "=== UNCOMMITTED ==="
+  git status --short 2>/dev/null || echo "(not a git repo)"
+}`}</code></pre>
+
+        <p class="ck-mini-h">▸ Configuração</p>
+        <pre><code>{`// .claude/settings.json
+{ "hooks": {
+    "SessionStart": [{ "hooks": [{
+      "type": "command",
+      "command": "bash .claude/hooks/session-start.sh"
+    }] }]
+} }`}</code></pre>
+
+        <p class="ck-gotcha"><b>Pegadinha</b> — <code>SessionStart</code> dispara em <i>todo</i> source incluindo <code>compact</code>. Se você quer só startup, branche em <code>source</code> via <code>jq -r '.source'</code> primeiro.</p>
+      </article>
+
+      <!-- §2 Stop -->
+      <article id="r2" class="ck-recipe ck-fam-cyan" data-family="session">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§2</span>
+          <h2 class="ck-rec-h">Bloquear saída se SESSION.md está desatualizado com WIP</h2>
+          <span class="ck-rec-event"><code>Stop</code></span>
+        </header>
+        <p class="ck-when"><b>Quando</b> — você termina sessões com WIP que a próxima sessão esquece. O hook chia uma vez: "ou comita, ou atualiza SESSION.md, e aí termina normalmente."</p>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/session-stop.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+dirty=$(git status --porcelain 2>/dev/null || true)
+[[ -z "$dirty" ]] && exit 0
+session_mtime=$(stat -c %Y .claude/SESSION.md 2>/dev/null || echo 0)
+started=$(stat -c %Y .claude/.session-state/started-at 2>/dev/null || echo 0)
+[[ "$session_mtime" -gt "$started" ]] && exit 0
+[[ -f .claude/.session-state/nagged ]] && exit 0
+touch .claude/.session-state/nagged
+echo "Before ending: uncommitted WIP exists but SESSION.md was not updated this session. Update it (or commit), then end normally." >&2
+exit 2`}</code></pre>
+
+        <p class="ck-mini-h">▸ Configuração</p>
+        <pre><code>{`{ "hooks": {
+    "Stop": [{ "hooks": [{
+      "type": "command",
+      "command": "bash .claude/hooks/session-stop.sh"
+    }] }]
+} }`}</code></pre>
+
+        <p class="ck-gotcha"><b>Pegadinha</b> — o marcador <code>nagged</code> é por sessão; sem ele o hook bloquearia pra sempre (loop infinito). Sempre inclui um guard "bloqueia no máximo uma vez".</p>
+      </article>
+
+      <!-- §3 UserPromptSubmit -->
+      <article id="r3" class="ck-recipe ck-fam-magenta" data-family="prompt">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§3</span>
+          <h2 class="ck-rec-h">Auto-expandir <code>@PR/123</code> em prompts pro diff do PR</h2>
+          <span class="ck-rec-event"><code>UserPromptSubmit</code></span>
+        </header>
+        <p class="ck-when"><b>Quando</b> — você referencia PRs o tempo todo. Em vez de colar o diff toda vez, digita <code>@PR/123</code> e o hook busca e inlina o diff.</p>
+
+        <p class="ck-mini-h">▸ Payload</p>
+        <pre><code>{`{
+  "hook_event_name": "UserPromptSubmit",
+  "user_message": "review @PR/123 for security issues"
+}`}</code></pre>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/expand-pr.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+msg=$(jq -r '.user_message')
+prs=$(echo "$msg" | grep -oE '@PR/[0-9]+' | sed 's|@PR/||' | sort -u || true)
+[[ -z "$prs" ]] && exit 0
+echo "=== referenced PR diffs ==="
+for n in $prs; do
+  echo "--- PR #$n ---"
+  gh pr diff "$n" 2>/dev/null | head -c 4096 || echo "(failed to fetch)"
+done`}</code></pre>
+
+        <p class="ck-mini-h">▸ Configuração</p>
+        <pre><code>{`{ "hooks": {
+    "UserPromptSubmit": [{ "hooks": [{
+      "type": "command",
+      "command": "bash .claude/hooks/expand-pr.sh"
+    }] }]
+} }`}</code></pre>
+
+        <p class="ck-gotcha"><b>Pegadinha</b> — o stdout de hooks <code>UserPromptSubmit</code> é injetado como <code>additionalContext</code> logo depois da mensagem do usuário. Mantém limitado (<code>head -c 4096</code>) ou um PR grande inunda a janela de contexto.</p>
+      </article>
+
+      <!-- §4 InstructionsLoaded -->
+      <article id="r4" class="ck-recipe ck-fam-magenta" data-family="prompt">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§4</span>
+          <h2 class="ck-rec-h">Logar qual CLAUDE.md / regra carregou quando (debug)</h2>
+          <span class="ck-rec-event"><code>InstructionsLoaded</code></span>
+        </header>
+        <p class="ck-when"><b>Quando</b> — você adicionou uma regra com escopo de path (frontmatter <code>paths:</code>) e parece que ela não está disparando. O hook escreve um trace JSONL pra você confirmar.</p>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/rule-load-debug.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+[[ "$&#123;CLAUDE_RULE_LOAD_DEBUG:-0&#125;" = "1" ]] || exit 0
+mkdir -p .claude
+exec 9>>.claude/.rule-load-debug.jsonl
+flock 9
+jq -c '{ts:now|todate, file, memory_type, load_reason, globs, trigger_file, session_id}' >&9`}</code></pre>
+
+        <p class="ck-mini-h">▸ Inspecionar</p>
+        <pre><code>{`tail -f .claude/.rule-load-debug.jsonl | jq .`}</code></pre>
+
+        <p class="ck-gotcha"><b>Pegadinha</b> — <code>InstructionsLoaded</code> dispara dentro do mesmo turno do load que o triggou. Hook é observabilidade pura; stdout/stderr NÃO são injetados na conversa para esse evento.</p>
+      </article>
+
+      <!-- §5 PreToolUse(Bash) -->
+      <article id="r5" class="ck-recipe ck-fam-orange" data-family="tool-gate">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§5</span>
+          <h2 class="ck-rec-h">Bloquear formas destrutivas de shell</h2>
+          <span class="ck-rec-event"><code>PreToolUse(Bash)</code></span>
+        </header>
+        <p class="ck-when"><b>Quando</b> — você confia no Claude pra rodar Bash, mas nunca quer ver <code>rm -rf</code>, <code>git push --force</code>, ou instalação de dependência sem lockfile. Bloqueia esses por forma, não por negação global.</p>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/pre-bash.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+cmd=$(jq -r '.tool_input.command')
+block() { echo "blocked: $1" >&2; exit 2; }
+[[ "$cmd" =~ rm[[:space:]]+-[rRf]+ ]] && block "rm -rf is denied"
+[[ "$cmd" =~ git[[:space:]]+push.*--force ]] && block "force push is denied"
+[[ "$cmd" =~ (npm|pnpm|bun)[[:space:]]+(i|install) ]] && {
+  [[ -f package-lock.json || -f pnpm-lock.yaml || -f bun.lock ]] || \
+    block "install without lockfile in tree"
+}
+exit 0`}</code></pre>
+
+        <p class="ck-mini-h">▸ Configuração</p>
+        <pre><code>{`{ "hooks": {
+    "PreToolUse": [{
+      "matcher": "Bash",
+      "hooks": [{
+        "type": "command",
+        "command": "bash .claude/hooks/pre-bash.sh"
+      }]
+    }]
+} }`}</code></pre>
+
+        <p class="ck-gotcha"><b>Pegadinha</b> — <code>matcher: "Bash"</code> no nível do array limita o hook a chamadas Bash. Sem isso, o hook dispara em toda chamada de tool e seu jq query falha em payload com forma errada.</p>
+      </article>
+
+      <!-- §6 PreToolUse(Agent) -->
+      <article id="r6" class="ck-recipe ck-fam-orange" data-family="tool-gate">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§6</span>
+          <h2 class="ck-rec-h">Exigir handoff de delegação com 5 campos</h2>
+          <span class="ck-rec-event"><code>PreToolUse(Agent)</code></span>
+        </header>
+        <p class="ck-when"><b>Quando</b> — você sempre acaba com sub-agents under-specificados que inventam o próprio framing. Impõe um handoff estruturado: TASK / CONTEXT / CONSTRAINTS / DELIVERABLE / DONE_WHEN.</p>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/pre-agent.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+prompt=$(jq -r '.tool_input.prompt')
+required=(TASK CONTEXT CONSTRAINTS)
+outcome=0
+for f in "$&#123;required[@]&#125;"; do
+  echo "$prompt" | grep -qiE "^[[:space:]]*$f:" || { missing+=" $f"; outcome=1; }
+done
+echo "$prompt" | grep -qiE "^[[:space:]]*(DELIVERABLE|DONE_WHEN):" || outcome=1
+
+[[ $outcome -eq 0 ]] && exit 0
+cat >&2 <<MSG
+delegation-gate: missing fields$missing (and/or DELIVERABLE/DONE_WHEN).
+Use 5-field handoff:
+  TASK:        <one sentence>
+  CONTEXT:     <files/paths>
+  CONSTRAINTS: <what NOT to do>
+  DELIVERABLE: <artifact> | DONE_WHEN: <verifier>
+MSG
+exit 2`}</code></pre>
+
+        <p class="ck-gotcha"><b>Pegadinha</b> — match case-insensitive (<code>-i</code>) é proposital; agents escrevem <code>Task:</code>, <code>TASK:</code>, <code>task:</code> indiferentemente. Ancorar no início da linha (<code>^</code>) evita match em "task list" dentro da prosa.</p>
+      </article>
+
+      <!-- §7 PostToolUse(Edit) -->
+      <article id="r7" class="ck-recipe ck-fam-orange" data-family="tool-gate">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§7</span>
+          <h2 class="ck-rec-h">Rodar prettier check em todo arquivo editado</h2>
+          <span class="ck-rec-event"><code>PostToolUse(Edit | Write | MultiEdit)</code></span>
+        </header>
+        <p class="ck-when"><b>Quando</b> — você quer consistência de format sem <code>prettier --write</code> manual depois de cada edit. O hook roda <code>--check</code> e mostra violações pro agent no próximo turno.</p>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/post-edit-prettier.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+file=$(jq -r '.tool_input.file_path // .tool_input.path // empty')
+[[ -z "$file" ]] && exit 0
+[[ "$file" =~ \\.(ts|tsx|js|jsx|json|md|css)$ ]] || exit 0
+out=$(npx -y prettier --check "$file" 2>&1) && exit 0
+echo "prettier-advisory: $file is not formatted" >&2
+echo "$out" >&2
+exit 0  # advisory: log, do not block`}</code></pre>
+
+        <p class="ck-gotcha"><b>Pegadinha</b> — o matcher <code>"Edit|Write|MultiEdit"</code> usa alternação regex. Nomes de campos de payload diferem: Edit/MultiEdit usam <code>file_path</code>; Write usa <code>file_path</code>; algumas tools legadas usaram <code>path</code>. O fallback <code>// empty</code> no jq cobre todas as formas.</p>
+      </article>
+
+      <!-- §8 PermissionDenied -->
+      <article id="r8" class="ck-recipe ck-fam-green" data-family="permission">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§8</span>
+          <h2 class="ck-rec-h">Sugerir alternativa quando o usuário nega uma tool</h2>
+          <span class="ck-rec-event"><code>PermissionDenied</code></span>
+        </header>
+        <p class="ck-when"><b>Quando</b> — o agent pede <code>Bash(curl …)</code>, você nega, mas preferia que ele usasse outro verbo. O hook injeta uma dica pro agent tentar de novo com a tool certa.</p>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/perm-denied-hint.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+denied=$(jq -r '.tool_name + "(" + (.tool_input | tostring) + ")"')
+case "$denied" in
+  Bash*curl*)  echo "hint: try the WebFetch tool instead of curl" ;;
+  Bash*rm*)    echo "hint: this project blocks rm; if you need to remove, ask the user" ;;
+  Bash*gh*pr*) echo "hint: prefer the GitHub MCP server (mcp__github__*) for PR ops" ;;
+esac`}</code></pre>
+
+        <p class="ck-gotcha"><b>Pegadinha</b> — <code>PermissionDenied</code> dispara depois do usuário negar o prompt. Stdout vira <code>additionalContext</code> no próximo turno do agent. Não moralize — dá um redirect concreto ou fica quieto.</p>
+      </article>
+
+      <!-- §9 SubagentStop -->
+      <article id="r9" class="ck-recipe ck-fam-violet" data-family="subagent">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§9</span>
+          <h2 class="ck-rec-h">Verificar se o deliverable que o sub-agent disse ter feito existe</h2>
+          <span class="ck-rec-event"><code>SubagentStop</code></span>
+        </header>
+        <p class="ck-when"><b>Quando</b> — sub-agents dizem "pronto, criei o arquivo X" mas X não existe. O hook parseia o campo <code>DELIVERABLE:</code> do brief, checa o path, e flagga discrepâncias.</p>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/subagent-verify.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+brief=$(jq -r '.tool_input.prompt // empty')
+deliverable=$(echo "$brief" | grep -iE '^[[:space:]]*DELIVERABLE:' | head -1 | sed -E 's/^[^:]*:[[:space:]]*//')
+# crude: pull any path-shaped token from the deliverable line
+path=$(echo "$deliverable" | grep -oE '[a-zA-Z0-9_./-]+\\.(ts|tsx|md|json|astro|sh|py|go|rs)' | head -1 || true)
+[[ -z "$path" ]] && exit 0
+[[ -f "$path" ]] && exit 0
+echo "subagent-advisory: claimed deliverable '$path' not found in tree" >&2
+exit 0  # advisory`}</code></pre>
+
+        <p class="ck-gotcha"><b>Pegadinha</b> — extrair paths de prosa é frágil; o script só pega deliverables que nomeiam um path com extensão reconhecida. Pra checks mais ricos, parea <code>DELIVERABLE</code> com <code>DONE_WHEN: <comando verificável></code> e roda o comando em vez disso.</p>
+      </article>
+
+      <!-- §10 PreCompact -->
+      <article id="r10" class="ck-recipe ck-fam-yellow" data-family="compaction">
+        <header class="ck-rec-head">
+          <span class="ck-rec-n">§10</span>
+          <h2 class="ck-rec-h">Snapshot dos últimos 12 turnos antes da sumarização</h2>
+          <span class="ck-rec-event"><code>PreCompact</code></span>
+        </header>
+        <p class="ck-when"><b>Quando</b> — sessões longas são sumarizadas e o sumarizador descarta wording verbatim, paths de arquivo, identificadores exatos. O hook salva turnos brutos no disco pro próximo session-start re-injetar.</p>
+
+        <p class="ck-mini-h">▸ Script — <code>.claude/hooks/pre-compact.sh</code></p>
+        <pre><code>{`#!/usr/bin/env bash
+set -euo pipefail
+transcript=$(jq -r '.transcript_path // empty')
+[[ -f "$transcript" ]] || exit 0
+# extract last 12 user prompts + their assistant text
+jq -c 'select(.role=="user" or .role=="assistant") | {role, content}' "$transcript" \\
+  | tail -n 48 > .claude/COMPACT_NOTES.md
+echo "wrote .claude/COMPACT_NOTES.md ($(wc -l < .claude/COMPACT_NOTES.md) lines)" >&2`}</code></pre>
+
+        <p class="ck-mini-h">▸ Hook companheiro SessionStart</p>
+        <pre><code>{`# in .claude/hooks/session-start.sh
+if [[ "$(jq -r '.source')" = "compact" && -f .claude/COMPACT_NOTES.md ]]; then
+  echo "=== PRE-COMPACT SNAPSHOT ==="
+  cat .claude/COMPACT_NOTES.md
+fi`}</code></pre>
+
+        <p class="ck-gotcha"><b>Pegadinha</b> — só <code>PreCompact</code> pode escrever antes do sumarizador truncar contexto, e só <code>SessionStart</code> com <code>source: "compact"</code> pode injetar depois. Nenhum outro hook ponteia esse gap. As duas metades são necessárias.</p>
+      </article>
+
+      <!-- ===== FOOTER ===== -->
+      <footer class="ck-foot">
+        <div class="ck-foot-band">
+          <span class="ck-tag">10 RECEITAS · 7 FAMÍLIAS · 29 EVENTOS COBERTOS EM PRINCÍPIO</span>
+        </div>
+        <p class="ck-foot-next">
+          Quer a taxonomia inteira? <a href={`${cheatsheetPath}#hooks-radial`}>Hook radial do Atlas</a> no cheatsheet. Novo em hooks? Começa pelo <a href={`${masterclassPath}#m8`}>§8 da Master Class</a>. Código: <a href={REPO_URL} target="_blank" rel="noopener">github/cfpperche/claude-core</a>.
+        </p>
+      </footer>
+
+    </main>
+
+    <style is:global>
+      :root[data-theme="poster"] {
+        --p-bg: #0a0e1f;
+        --p-bg-2: #0e1530;
+        --p-ink: #e5e7eb;
+        --p-ink-dim: #9ca3af;
+        --p-ink-faint: #6b7280;
+        --p-green: #39ff14;
+        --p-orange: #ff9933;
+        --p-red: #ff4d4d;
+        --p-cyan: #00e5ff;
+        --p-magenta: #ff44ff;
+        --p-violet: #a78bfa;
+        --p-yellow: #ffe066;
+        --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+      }
+      html, body { background: var(--p-bg); color: var(--p-ink); overflow-x: clip; }
+      .ck-page, .ck-recipe, .ck-top { min-width: 0; }
+      .ck-body {
+        max-width: 100%;
+        overflow-x: clip;
+        overflow-wrap: anywhere;
+        font-family: var(--font-sans);
+        margin: 0;
+        background: radial-gradient(ellipse at top, var(--p-bg-2), var(--p-bg) 70%);
+        min-height: 100vh;
+        padding: 0 0 60px;
+      }
+      .ck-top {
+        display: flex;
+        align-items: center;
+        padding: 14px 32px 0;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        gap: 16px;
+      }
+      .ck-top-tools { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+      .ck-back {
+        color: var(--p-cyan);
+        text-decoration: none;
+        letter-spacing: 0.04em;
+        border-bottom: 1px dashed transparent;
+      }
+      .ck-back:hover { border-bottom-color: var(--p-cyan); }
+      .ck-tool-btn {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        color: var(--p-orange);
+        background: transparent;
+        border: 1px solid rgba(255,153,51,0.4);
+        border-radius: 2px;
+        padding: 3px 10px;
+        cursor: pointer;
+      }
+      .ck-tool-btn:hover { color: var(--p-yellow); border-color: var(--p-yellow); }
+
+      .ck-page {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 24px 32px;
+      }
+      @media (max-width: 720px) {
+        .ck-page { padding: 16px; }
+      }
+
+      /* banner */
+      .ck-banner { text-align: center; margin-bottom: 30px; }
+      .ck-strip {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--p-orange);
+        letter-spacing: 0.12em;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: center;
+        gap: 18px;
+        flex-wrap: wrap;
+      }
+      .ck-tag { white-space: nowrap; }
+      .ck-title {
+        font-family: var(--font-mono);
+        font-size: 56px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin: 8px 0 14px;
+        line-height: 0.98;
+      }
+      .ck-title-line { display: block; color: var(--p-ink); }
+      .ck-title-accent { color: var(--p-orange); }
+      .ck-sub {
+        color: var(--p-ink-dim);
+        font-size: 14px;
+        margin: 0;
+      }
+      .ck-sub code { color: var(--p-orange); }
+      @media (max-width: 720px) {
+        .ck-title { font-size: 38px; }
+        .ck-strip { font-size: 9.5px; gap: 10px; }
+      }
+
+      /* intro */
+      .ck-intro {
+        background: rgba(0,0,0,0.3);
+        border-left: 3px solid var(--p-cyan);
+        border-radius: 2px;
+        padding: 18px 22px;
+        margin: 18px 0 24px;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .ck-intro-h {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--p-cyan);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin: 0 0 8px;
+      }
+      .ck-intro-h + p, .ck-intro-h + ul { margin-top: 0; }
+      .ck-intro p { margin: 0 0 14px; color: var(--p-ink); }
+      .ck-intro-ul { margin: 0 0 14px; padding-left: 20px; color: var(--p-ink); }
+      .ck-intro-ul li { margin-bottom: 4px; }
+      .ck-intro code { color: var(--p-orange); font-family: var(--font-mono); }
+
+      /* filters */
+      .ck-filters {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 0 0 28px;
+        padding: 12px 16px;
+        background: rgba(0,0,0,0.25);
+        border-radius: 2px;
+        border-left: 3px solid var(--p-magenta);
+      }
+      .ck-filter-h {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--p-magenta);
+        letter-spacing: 0.08em;
+        font-weight: 700;
+        margin-right: 6px;
+      }
+      .ck-filter {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.15);
+        color: var(--p-ink-dim);
+        padding: 3px 10px;
+        border-radius: 2px;
+        cursor: pointer;
+        letter-spacing: 0.04em;
+      }
+      .ck-filter:hover { color: var(--p-ink); border-color: var(--p-ink-dim); }
+      .ck-filter[aria-pressed="true"] { color: var(--p-ink); background: rgba(255,255,255,0.06); }
+      .ck-filter-cyan[aria-pressed="true"]    { border-color: var(--p-cyan); color: var(--p-cyan); }
+      .ck-filter-magenta[aria-pressed="true"] { border-color: var(--p-magenta); color: var(--p-magenta); }
+      .ck-filter-orange[aria-pressed="true"]  { border-color: var(--p-orange); color: var(--p-orange); }
+      .ck-filter-green[aria-pressed="true"]   { border-color: var(--p-green); color: var(--p-green); }
+      .ck-filter-violet[aria-pressed="true"]  { border-color: var(--p-violet); color: var(--p-violet); }
+      .ck-filter-yellow[aria-pressed="true"]  { border-color: var(--p-yellow); color: var(--p-yellow); }
+
+      /* recipe cards */
+      .ck-recipe {
+        margin-bottom: 28px;
+        padding: 18px 22px;
+        background: rgba(0,0,0,0.28);
+        border-left: 3px solid var(--ck-fam, var(--p-ink-faint));
+        border-radius: 2px;
+        scroll-margin-top: 20px;
+      }
+      .ck-fam-cyan    { --ck-fam: var(--p-cyan); }
+      .ck-fam-magenta { --ck-fam: var(--p-magenta); }
+      .ck-fam-orange  { --ck-fam: var(--p-orange); }
+      .ck-fam-green   { --ck-fam: var(--p-green); }
+      .ck-fam-violet  { --ck-fam: var(--p-violet); }
+      .ck-fam-yellow  { --ck-fam: var(--p-yellow); }
+
+      .ck-rec-head {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 10px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        flex-wrap: wrap;
+      }
+      .ck-rec-n {
+        font-family: var(--font-mono);
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--ck-fam);
+      }
+      .ck-rec-h {
+        font-family: var(--font-mono);
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--p-ink);
+        margin: 0;
+        flex: 1;
+        line-height: 1.35;
+      }
+      .ck-rec-h code {
+        color: var(--p-orange);
+        font-size: 13.5px;
+      }
+      .ck-rec-event {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ck-fam);
+        letter-spacing: 0.06em;
+      }
+      .ck-rec-event code { color: var(--ck-fam); }
+
+      .ck-when {
+        font-size: 13.5px;
+        line-height: 1.55;
+        color: var(--p-ink);
+        margin: 0 0 14px;
+      }
+      .ck-when b { color: var(--ck-fam); margin-right: 4px; letter-spacing: 0.04em; }
+      .ck-when code { color: var(--p-orange); font-family: var(--font-mono); font-size: 12px; }
+
+      .ck-mini-h {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--p-magenta);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin: 12px 0 4px;
+      }
+      .ck-mini-h code { color: var(--p-orange); font-size: 11px; }
+      .ck-recipe pre {
+        background: rgba(0,0,0,0.45);
+        border-left: 2px solid var(--p-green);
+        padding: 10px 14px;
+        font-size: 11.5px;
+        color: var(--p-ink);
+        overflow-x: auto;
+        margin: 4px 0 12px;
+        border-radius: 2px;
+        line-height: 1.5;
+      }
+      .ck-recipe pre code { color: var(--p-ink); font-family: var(--font-mono); }
+
+      .ck-gotcha {
+        margin: 14px 0 0;
+        padding: 10px 14px;
+        background: rgba(255,77,77,0.08);
+        border-left: 2px solid var(--p-red);
+        border-radius: 2px;
+        font-size: 12.5px;
+        color: var(--p-ink);
+        line-height: 1.5;
+      }
+      .ck-gotcha b { color: var(--p-red); margin-right: 6px; }
+      .ck-gotcha code { color: var(--p-orange); font-family: var(--font-mono); font-size: 11px; }
+
+      /* footer */
+      .ck-foot {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        text-align: center;
+      }
+      .ck-foot-band {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--p-orange);
+        letter-spacing: 0.12em;
+        margin-bottom: 12px;
+      }
+      .ck-foot-next {
+        font-size: 13px;
+        color: var(--p-ink-dim);
+      }
+      .ck-foot-next a {
+        color: var(--p-cyan);
+        text-decoration: none;
+        border-bottom: 1px dashed transparent;
+      }
+      .ck-foot-next a:hover { border-bottom-color: var(--p-cyan); }
+
+      /* filter dim */
+      .ck-body.filter-active .ck-recipe:not(.ck-match) {
+        opacity: 0.15;
+        filter: grayscale(0.6);
+        transition: opacity 0.18s, filter 0.18s;
+      }
+
+      /* ===== PRINT — pocket-guide ===== */
+      @media print {
+        @page { margin: 14mm 12mm; size: A4; }
+        html, body, .ck-body {
+          background: #fff !important;
+          color: #111 !important;
+        }
+        .ck-top, .ck-filters, .ck-back, .ck-tool-btn { display: none !important; }
+        .ck-page { max-width: none; padding: 0; margin: 0; }
+        .ck-banner { margin-bottom: 8mm; page-break-after: avoid; }
+        .ck-strip { color: #555 !important; }
+        .ck-title { color: #111 !important; font-size: 28pt; }
+        .ck-title-accent { color: #111 !important; }
+        .ck-sub { color: #444 !important; font-size: 10pt; }
+        .ck-intro {
+          background: #fafafa !important;
+          border-left-color: #888 !important;
+          color: #111 !important;
+          font-size: 9.5pt;
+          page-break-after: always;
+        }
+        .ck-intro-h { color: #111 !important; }
+        .ck-intro code { color: #b04500 !important; }
+        .ck-recipe {
+          background: #fff !important;
+          border-left: 2pt solid #555 !important;
+          page-break-before: always;
+          page-break-inside: avoid;
+          padding: 4mm 6mm;
+        }
+        .ck-recipe:first-of-type { page-break-before: auto; }
+        .ck-rec-head { border-bottom-color: #ccc !important; }
+        .ck-rec-n, .ck-rec-h, .ck-rec-h code { color: #111 !important; }
+        .ck-rec-event, .ck-rec-event code { color: #555 !important; }
+        .ck-when { color: #111 !important; }
+        .ck-when b { color: #555 !important; }
+        .ck-when code { color: #b04500 !important; }
+        .ck-mini-h { color: #666 !important; }
+        .ck-recipe pre {
+          background: #f4f4f4 !important;
+          border-left-color: #888 !important;
+          color: #111 !important;
+          font-size: 8.5pt;
+        }
+        .ck-recipe pre code { color: #111 !important; }
+        .ck-gotcha {
+          background: #fef0f0 !important;
+          border-left-color: #b91c1c !important;
+          color: #111 !important;
+          font-size: 9pt;
+        }
+        .ck-gotcha b { color: #b91c1c !important; }
+        .ck-foot-next { color: #444 !important; font-size: 9pt; }
+        .ck-foot-next a { color: #0066aa !important; }
+        .ck-foot-next a::after {
+          content: " (" attr(href) ")";
+          font-size: 7.5pt;
+          color: #777;
+        }
+      }
+    </style>
+
+    <script is:inline>
+      (() => {
+        const body = document.body;
+        const filters = Array.from(document.querySelectorAll(".ck-filter"));
+        const recipes = Array.from(document.querySelectorAll(".ck-recipe"));
+
+        filters.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const fam = btn.getAttribute("data-family");
+            filters.forEach((b) => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
+            if (fam === "all") {
+              body.classList.remove("filter-active");
+              recipes.forEach((r) => r.classList.remove("ck-match"));
+              return;
+            }
+            body.classList.add("filter-active");
+            recipes.forEach((r) => {
+              r.classList.toggle("ck-match", r.getAttribute("data-family") === fam);
+            });
+          });
+        });
+
+        const print = document.getElementById("ck-print");
+        if (print) print.addEventListener("click", () => window.print());
+      })();
+    </script>
+  </body>
+</html>
