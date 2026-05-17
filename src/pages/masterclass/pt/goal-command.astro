@@ -1,0 +1,593 @@
+---
+import "../../../styles/global.css";
+import { REPO_URL } from "../../../i18n/locales";
+import ResourcesMenu from "../../../components/ResourcesMenu.astro";
+import LanguageSwitcher from "../../../components/LanguageSwitcher.astro";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const siteUrl = "https://cfpperche.github.io";
+const CC_VERSION = "2.1.143";
+const FEATURE_VERSION = "2.1.139";   // /goal landed here
+const pageTitle = `Claude Code · /goal Master Class · v${CC_VERSION} (pt-BR)`;
+const pageDesc = `Aprofundamento no comando /goal no Claude Code v${CC_VERSION}: anatomia de uma condição, arquitetura do evaluator, vs /loop e Stop hooks, uso headless, anti-padrões. 8 módulos.`;
+
+const cheatsheetPath = `${base}/cheatsheet/pt/claude-core/`;
+const masterclassPath = `${base}/masterclass/pt/claude-code/`;
+const cookbookPath = `${base}/cookbook/pt/hooks/`;
+
+const modules = [
+  { n: 1, slug: "what",        title: "O que /goal é",                       tag: "fundamentos" },
+  { n: 2, slug: "vs",          title: "/goal vs /loop vs Stop Hook vs Auto", tag: "fundamentos" },
+  { n: 3, slug: "anatomy",     title: "Anatomia de uma boa condição",        tag: "prática"     },
+  { n: 4, slug: "gallery",     title: "Bom vs Ruim — uma galeria",           tag: "prática"     },
+  { n: 5, slug: "bounding",    title: "Pondo limites no run",                tag: "prática"     },
+  { n: 6, slug: "evaluator",   title: "Como o evaluator funciona",           tag: "internos"    },
+  { n: 7, slug: "headless",    title: "/goal headless",                      tag: "produção"    },
+  { n: 8, slug: "antipatterns",title: "Limitações & Anti-padrões",           tag: "produção"    },
+];
+---
+
+<!doctype html>
+<html lang="pt-BR" data-theme="poster">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDesc} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDesc} />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content={`${siteUrl}${base}/masterclass/pt/goal-command/`} />
+    <meta property="og:locale" content="pt_BR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+  </head>
+  <body class="mc-body">
+
+    <div class="mc-top">
+      <a href={`${base}/pt/`} class="mc-back">← claude-core</a>
+      <ResourcesMenu current="goal" locale="pt" />
+      <div class="mc-top-tools">
+        <LanguageSwitcher
+          enHref={`${base}/masterclass/goal-command/`}
+          ptHref={`${base}/masterclass/pt/goal-command/`}
+          esHref={`${base}/masterclass/es/goal-command/`}
+          current="pt"
+        />
+        <button id="mc-print" type="button" class="mc-tool-btn" title="Imprimir como PDF">
+          <span aria-hidden="true">↓</span> PDF
+        </button>
+      </div>
+    </div>
+
+    <main class="mc-page">
+
+      <header class="mc-banner">
+        <div class="mc-strip">
+          <span class="mc-tag">▮ CLAUDE-CORE · ACADEMY</span>
+          <span class="mc-tag">CLAUDE CODE v{CC_VERSION}</span>
+          <span class="mc-tag">/goal · DEEP DIVE ▮</span>
+        </div>
+        <h1 class="mc-title">
+          <span class="mc-title-line">O COMANDO</span>
+          <span class="mc-title-line mc-title-accent">/goal</span>
+        </h1>
+        <p class="mc-sub">
+          Um comando, oito módulos, ~25 minutos. Define a linha de chegada, sai de perto — e entende o que tá rodando por baixo.
+        </p>
+      </header>
+
+      <section class="mc-intro">
+        <h2 class="mc-intro-h">Por que uma classe inteira sobre um comando</h2>
+        <p>
+          <code>/goal</code> parece açúcar sintático — você digita uma condição, o Claude continua trabalhando até a condição valer — mas o movimento arquitetural por baixo é grande: <b>o agente fazendo o trabalho não é mais o agente que decide que está pronto</b>. Um segundo modelo, menor, julga a condição a cada turno. Acerte a condição e você converteu um loop de chat em um contrato.
+        </p>
+        <h2 class="mc-intro-h">O que você vai aprender</h2>
+        <ul class="mc-intro-ul">
+          <li>A sintaxe exata, incluindo aliases e o orçamento de 4.000 caracteres da condição.</li>
+          <li>Quando <code>/goal</code> ganha de <code>/loop</code> e um Stop hook — e quando não ganha.</li>
+          <li>Os três ingredientes de uma condição que sobrevive a mais de 20 turnos.</li>
+          <li>Como o evaluator realmente decide "pronto", e o que ele nunca consegue ver.</li>
+          <li><code>/goal</code> headless em CI, mais os anti-padrões que queimam dinheiro silenciosamente.</li>
+        </ul>
+        <h2 class="mc-intro-h">Construído contra</h2>
+        <p>
+          Claude Code <code>v{CC_VERSION}</code>. O comando chegou na <code>v{FEATURE_VERSION}</code> (maio de 2026). O diálogo de trust precisa ter sido aceito no workspace, já que <code>/goal</code> é açúcar com escopo de sessão em cima do sistema de hooks.
+        </p>
+      </section>
+
+      <nav class="mc-toc" aria-label="Sumário da /goal class">
+        <div class="mc-toc-h">▸ SUMÁRIO</div>
+        <ol class="mc-toc-list">
+          {modules.map((m) => (
+            <li>
+              <a href={`#m${m.n}`} data-tag={m.tag}>
+                <span class="mc-toc-n">§{m.n}</span>
+                <span class="mc-toc-t">{m.title}</span>
+                <span class="mc-toc-tag">{m.tag}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+
+      <!-- §1 · O QUE É -->
+      <section id="m1" class="mc-mod mc-mod-foundations">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§1</span>
+          <h2 class="mc-mod-h">O que /goal é</h2>
+          <span class="mc-mod-tag">fundamentos</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — <code>/goal &lt;condição&gt;</code> define uma condição de conclusão com escopo da sessão. Depois de cada turno, um modelo pequeno e rápido julga se a condição vale. Se não, o Claude pega mais um turno — automaticamente, sem precisar de "continua aí" de você.</p>
+
+          <p class="mc-mini-h">▸ Os três usos, mesmo comando</p>
+          <ul>
+            <li><code>/goal &lt;condição&gt;</code> — define (ou substitui) o goal ativo. Um turno começa imediatamente, a própria condição vira a diretiva.</li>
+            <li><code>/goal</code> (sem args) — mostra o status: condição, tempo de execução, turnos avaliados, custo em tokens, última razão do evaluator.</li>
+            <li><code>/goal clear</code> — remove o goal ativo. Aliases: <code>stop · off · reset · none · cancel</code>.</li>
+          </ul>
+
+          <p class="mc-mini-h">▸ A sacada arquitetural</p>
+          <div class="mc-diagram"><span class="d-acc">VOCÊ</span> — define a condição uma vez
+   │
+   ▼
+<span class="d-mag">WORKER</span> (turno principal do Claude) — faz o trabalho
+   │
+   ▼
+<span class="d-key">EVALUATOR</span> (modelo pequeno e rápido, Haiku por padrão) — lê o transcript, decide "pronto?"
+   │
+   ├─ sim → goal limpo, controle volta pra você
+   └─ não → razão é injetada como guia, worker pega mais um turno</div>
+
+          <p>Essa separação é o que faz o comando valer a pena. O worker fica otimista ("quase lá"); o evaluator é cético ("você disse que os testes passam — me mostra"). Dois papéis, dois modelos, um loop.</p>
+
+          <p class="mc-mini-h">▸ Um primeiro goal</p>
+          <pre><code>/goal todos os testes em test/auth passam e o passo de lint está limpo</code></pre>
+          <p>Enquanto o goal está ativo, um indicador <code>◎ /goal active</code> mostra há quanto tempo está rodando. A condição pode ter até 4.000 caracteres — o suficiente pra detalhar restrições.</p>
+
+          <a class="mc-deep" href="https://code.claude.com/docs/en/goal" target="_blank" rel="noopener">Aprofundar → docs oficiais do /goal</a>
+        </div>
+        <a class="mc-next" href="#m2">Próximo → §2 · /goal vs alternativas</a>
+      </section>
+
+      <!-- §2 · COMPARAÇÃO -->
+      <section id="m2" class="mc-mod mc-mod-foundations">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§2</span>
+          <h2 class="mc-mod-h">/goal vs /loop vs Stop Hook vs Modo Auto</h2>
+          <span class="mc-mod-tag">fundamentos</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — quatro mecanismos mantêm uma sessão rodando entre prompts. Escolhe por <b>o que deve iniciar o próximo turno</b> e <b>quem decide que está pronto</b>.</p>
+
+          <p class="mc-mini-h">▸ A comparação de quatro</p>
+          <div class="mc-diagram"><span class="d-acc">/goal</span>      próximo turno: turno anterior termina  ·  para: modelo evaluator diz "pronto"
+<span class="d-acc">/loop</span>      próximo turno: intervalo de tempo passa  ·  para: você para OU Claude julga pronto
+<span class="d-acc">Stop hook</span>  próximo turno: turno anterior termina  ·  para: SEU script/prompt decide
+<span class="d-acc">Modo auto</span>  próximo turno: nunca (turno único)       ·  para: Claude julga trabalho pronto
+
+<span class="d-dim">/goal e Stop hook ambos disparam após cada turno. /goal é açúcar com escopo
+de sessão em cima de um Stop hook baseado em prompt. Modo auto é ortogonal —
+remove prompts por ferramenta, não inicia novos turnos. Combina: /goal + modo
+auto = loop sem supervisão.</span></div>
+
+          <p class="mc-mini-h">▸ Quando puxar cada um</p>
+          <ul>
+            <li><b>/goal</b> — trabalho substancial com um estado final verificável, em que o evaluator consegue ler a prova no transcript. Migração até os testes passarem. Quebrar um arquivo até cada pedaço estar abaixo de um limite de tamanho.</li>
+            <li><b>/loop</b> — polling agendado. "Checa o deploy a cada 5 min." "Cuida de uma fila de PR." Não é uma condição de conclusão; é uma cadência de re-execução.</li>
+            <li><b>Stop hook</b> — quando você quer um check determinístico (comando shell, exit code) ou lógica de prompt customizada que vive nas settings e vale na sessão inteira.</li>
+            <li><b>Modo auto</b> — combine com qualquer um dos acima quando você não quer prompts de permissão por ferramenta. Crítico pra uso sem supervisão; ortogonal a "quando o loop para".</li>
+          </ul>
+
+          <a class="mc-deep" href="https://code.claude.com/docs/en/scheduled-tasks" target="_blank" rel="noopener">Aprofundar → opções de agendamento (docs Anthropic)</a>
+        </div>
+        <a class="mc-next" href="#m3">Próximo → §3 · Anatomia de uma boa condição</a>
+      </section>
+
+      <!-- §3 · ANATOMIA -->
+      <section id="m3" class="mc-mod mc-mod-craft">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§3</span>
+          <h2 class="mc-mod-h">Anatomia de uma boa condição</h2>
+          <span class="mc-mod-tag">prática</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — uma condição que sobrevive a 20+ turnos tem três ingredientes: <b>um estado final mensurável</b>, <b>um check declarado</b> que o Claude pode rodar, e <b>restrições nomeando o que não pode mudar</b>.</p>
+
+          <p class="mc-mini-h">▸ Ingrediente 1 — Estado final mensurável</p>
+          <p>Uma quantidade observável que vai de "ainda não" pra "sim" exatamente uma vez. Não é uma sensação. Exemplos que funcionam: exit code de uma execução de testes, contagem de arquivos, tamanho de uma fila, "git status limpo". Exemplos que falham: "o código está bom", "os usuários vão ficar felizes", "production-ready".</p>
+
+          <p class="mc-mini-h">▸ Ingrediente 2 — Check declarado</p>
+          <p>Como o Claude deve <i>provar</i> o estado final. O evaluator lê o transcript; se a prova não está no transcript, o goal trava. Soletra o comando que o Claude deve rodar: <code>"npm test sai com exit 0"</code>, <code>"jq . config.json executa com sucesso"</code>, <code>"o diretório build/ contém index.html"</code>.</p>
+
+          <p class="mc-mini-h">▸ Ingrediente 3 — Restrições</p>
+          <p>O que <i>não</i> pode mudar enquanto chega no estado final. Sem isso, o worker pode "consertar" testes deletando eles ou fazer downgrade de uma dep em vez de corrigir o bug.</p>
+          <pre><code>/goal todos os testes em test/auth passam (npm test --silent sai com exit 0),
+o diff só toca em src/auth/* e test/auth/*,
+e package.json fica inalterado.</code></pre>
+
+          <p class="mc-mini-h">▸ O orçamento de 4.000 caracteres</p>
+          <p>A condição pode ser longa — usa esse espaço. Uma condição de dois parágrafos com restrições tipicamente performa melhor que uma de cinco palavras porque o evaluator tem mais pistas pra julgar. A partir de ~1.000 caracteres o worker também lê ela como uma mini spec.</p>
+
+          <a class="mc-deep" href={`${masterclassPath}#m4`}>Aprofundar → Master Class §4 Permissões (o pareamento de segurança)</a>
+        </div>
+        <a class="mc-next" href="#m4">Próximo → §4 · Galeria de bom vs ruim</a>
+      </section>
+
+      <!-- §4 · GALERIA -->
+      <section id="m4" class="mc-mod mc-mod-craft">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§4</span>
+          <h2 class="mc-mod-h">Bom vs Ruim — uma galeria</h2>
+          <span class="mc-mod-tag">prática</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — lê esses lado a lado. O padrão se revela mais rápido que qualquer regra.</p>
+
+          <p class="mc-mini-h">▸ Testes</p>
+          <pre><code>✓ /goal todos os testes em test/auth passam (npm test --silent sai com exit 0)
+✗ /goal conserta os testes</code></pre>
+
+          <p class="mc-mini-h">▸ Migração</p>
+          <pre><code>✓ /goal todo call site de db.queryOld foi substituído por db.queryV2,
+   bun tsc --noEmit sai com exit 0, nenhum .ts fora de src/db toca em db.queryOld
+✗ /goal migra as chamadas de banco</code></pre>
+
+          <p class="mc-mini-h">▸ Limpeza</p>
+          <pre><code>✓ /goal CHANGELOG.md tem uma entrada por PR mergeado nos últimos 7 dias
+   (verificado por gh pr list --state merged --search "merged:&gt;=2026-05-10");
+   cada entrada tem data, tipo e link.
+✗ /goal atualiza o changelog</code></pre>
+
+          <p class="mc-mini-h">▸ Refactor</p>
+          <pre><code>✓ /goal src/parser.ts foi quebrado de modo que cada arquivo resultante tem ≤200 linhas,
+   todos os callers compilam, bun test sai com exit 0, nenhuma nova dep em package.json
+✗ /goal quebra o parser em arquivos menores</code></pre>
+
+          <p class="mc-mini-h">▸ Backlog</p>
+          <pre><code>✓ /goal toda issue com label "good-first" está fechada,
+   com label "blocked", ou tem um comentário meu explicando o próximo passo.
+   Para depois de 30 turnos mesmo se não estiver pronta.
+✗ /goal faz triagem das issues</code></pre>
+
+          <p class="mc-mini-h">▸ O padrão</p>
+          <p>Todo exemplo "bom" nomeia <b>uma coisa pra contar</b>, <b>um comando pra rodar</b> e <b>o que fica intocado</b>. Todo exemplo "ruim" nomeia um verbo e confia que o worker vá definir "pronto".</p>
+        </div>
+        <a class="mc-next" href="#m5">Próximo → §5 · Pondo limites no run</a>
+      </section>
+
+      <!-- §5 · LIMITES -->
+      <section id="m5" class="mc-mod mc-mod-craft">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§5</span>
+          <h2 class="mc-mod-h">Pondo limites no run</h2>
+          <span class="mc-mod-tag">prática</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — não há limite built-in numa sessão de <code>/goal</code>. Adiciona uma cláusula de parada na própria condição, ou queima dinheiro enquanto dorme.</p>
+
+          <p class="mc-mini-h">▸ Built-in: nada</p>
+          <p>Um goal continua rodando até o evaluator dizer "sim" ou você rodar <code>/goal clear</code>. Não há max-turn padrão, não há orçamento padrão, não há timeout padrão.</p>
+
+          <p class="mc-mini-h">▸ Três formas de limitar</p>
+          <ol>
+            <li><b>Inline na condição.</b> Anexa <code>"ou para depois de 20 turnos"</code> ou <code>"ou para depois de 1 hora"</code>. O worker reporta progresso a cada turno; o evaluator lê o progresso e julga a cláusula.</li>
+            <li><b>Caps headless.</b> Quando rodando com <code>-p</code>, adiciona <code>--max-turns N</code> e <code>--max-budget-usd X</code> na CLI. Esses são impostos pelo próprio Claude Code, não pelo evaluator.</li>
+            <li><b>Kill switch externo.</b> Ctrl+C no modo interativo, ou matar o processo no headless. Bruto mas confiável.</li>
+          </ol>
+
+          <p class="mc-mini-h">▸ Um goal limitado na prática</p>
+          <pre><code>/goal flake-2-de-5 em test/network/* está resolvido
+(rodando cada suite 5× e mostrando 5/5 passes no output),
+ou para depois de 25 turnos. Restrição: não tocar em test infra
+a não ser que o setup de um único arquivo de teste seja a causa.</code></pre>
+
+          <p class="mc-mini-h">▸ Uma razão real pra setar um cap</p>
+          <p>Sem cap, um goal que não consegue convergir vai iterar pra sempre, cada turno custando dinheiro real. O autor da <code>claude-goal</code> da comunidade (pré-oficial) defaultou pra <b>500 continuações</b> como proteção contra runaway — o que te diz o quão ruim isso pode ficar.</p>
+
+          <a class="mc-deep" href={`${masterclassPath}#m9`}>Aprofundar → Master Class §9 Custo &amp; Fit do Modelo</a>
+        </div>
+        <a class="mc-next" href="#m6">Próximo → §6 · Como o evaluator funciona</a>
+      </section>
+
+      <!-- §6 · EVALUATOR -->
+      <section id="m6" class="mc-mod mc-mod-internals">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§6</span>
+          <h2 class="mc-mod-h">Como o evaluator funciona</h2>
+          <span class="mc-mod-tag">internos</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — <code>/goal</code> é um wrapper sobre um Stop hook baseado em prompt, com escopo de sessão. Após cada turno, condição + transcript são enviados pro <i>modelo pequeno e rápido</i> configurado (padrão: Haiku). Ele retorna sim/não + uma razão curta. É toda a máquina.</p>
+
+          <p class="mc-mini-h">▸ O loop, em detalhe</p>
+          <div class="mc-diagram">turno N termina
+        │
+        ▼
+<span class="d-mag">Stop hook dispara</span> (escopo de sessão, instalado pelo /goal)
+        │
+        ▼
+monta payload: <span class="d-acc">&#123;condição, transcript-até-agora&#125;</span>
+        │
+        ▼
+envia pro <span class="d-key">modelo pequeno e rápido</span> (tier "haiku" do provider por padrão)
+        │
+        ▼
+parseia resposta: <span class="d-acc">&#123;decision: "yes" | "no", reason: "..."&#125;</span>
+        │
+        ├─ sim → goal limpo, entrada "achieved" escrita no transcript, controle volta
+        └─ não → razão injetada como guia, turno N+1 inicia imediatamente</div>
+
+          <p class="mc-mini-h">▸ O que o evaluator CONSEGUE ver</p>
+          <ul>
+            <li>Toda mensagem de usuário e mensagem de assistant no transcript da sessão.</li>
+            <li>A condição que você setou.</li>
+            <li>Chamadas de tools e seus resultados, incluindo stdout e exit codes que o Claude já rodou.</li>
+          </ul>
+
+          <p class="mc-mini-h">▸ O que o evaluator NÃO consegue ver</p>
+          <ul>
+            <li>Arquivos no disco que ele ainda não vê no transcript.</li>
+            <li>Qualquer coisa que o Claude não printou. Um teste que passa silenciosamente <i>não conta</i> até o Claude mostrar o exit code.</li>
+            <li>Estado vivo. O evaluator não consegue abrir um browser, não consegue bater numa API, não consegue chamar tools.</li>
+          </ul>
+
+          <p class="mc-mini-h">▸ O custo</p>
+          <p>Tokens do evaluator são cobrados no tier de modelo pequeno e rápido (classe Haiku) e tipicamente são desprezíveis comparados ao turno principal. Concretamente: uma sessão de goal de 20 turnos que custa $4 em tokens de worker pode adicionar $0.05 em tokens de evaluator.</p>
+
+          <p class="mc-mini-h">▸ A nota de implementação que importa</p>
+          <p>Como <code>/goal</code> É um Stop hook, ele fica indisponível quando <code>disableAllHooks</code> está setado ou quando <code>allowManagedHooksOnly</code> o bloqueia. O diálogo de trust precisa estar aceito pro workspace. O comando te diz por que está indisponível em vez de silenciosamente não fazer nada.</p>
+
+          <a class="mc-deep" href={`${cookbookPath}#r2`}>Aprofundar → Hook Cookbook §2 Receita de Stop hook</a>
+        </div>
+        <a class="mc-next" href="#m7">Próximo → §7 · /goal headless</a>
+      </section>
+
+      <!-- §7 · HEADLESS -->
+      <section id="m7" class="mc-mod mc-mod-production">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§7</span>
+          <h2 class="mc-mod-h">/goal headless</h2>
+          <span class="mc-mod-tag">produção</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — passa <code>/goal &lt;condição&gt;</code> como o prompt pra <code>claude -p</code> e o loop inteiro roda em uma invocação só. Combina com <code>--max-turns</code> + <code>--max-budget-usd</code> + modo auto pra ter um agente sem supervisão com tetos duros.</p>
+
+          <p class="mc-mini-h">▸ A forma headless</p>
+          <pre><code>claude -p "/goal CHANGELOG.md tem uma entrada por PR mergeado nesta semana"
+        --permission-mode bypassPermissions
+        --max-turns 30
+        --max-budget-usd 1.50
+        --output-format json</code></pre>
+
+          <p class="mc-mini-h">▸ Um passo real de GitHub Actions</p>
+          <pre><code>- name: Triagem noturna de issues
+  run: |
+    claude -p \
+      --permission-mode bypassPermissions \
+      --max-turns 40 \
+      --max-budget-usd 2.00 \
+      --output-format json \
+      "/goal toda issue com label 'needs-triage' está
+       (a) com label de um de &#123;bug, feature, question, won't-fix&#125;,
+       (b) fechada com uma razão, ou
+       (c) comentada com uma pergunta de follow-up pro autor.
+       Para depois de 40 turnos mesmo se não estiver pronto."
+  env:
+    ANTHROPIC_API_KEY: $&#123;&#123; secrets.ANTHROPIC_API_KEY &#125;&#125;</code></pre>
+
+          <p class="mc-mini-h">▸ Comportamento no resume</p>
+          <p>Se uma sessão termina com um goal ainda ativo, <code>--resume</code> ou <code>--continue</code> restaura a condição. A contagem de turnos, o timer, e o baseline de tokens resetam no resume. Um goal já <i>achieved</i> não é restaurado.</p>
+
+          <p class="mc-mini-h">▸ As três regras de disciplina</p>
+          <ol>
+            <li><b>Sempre</b> seta <code>--max-turns</code> E <code>--max-budget-usd</code>. Headless sem caps é um runaway disfarçado de workflow.</li>
+            <li>Trata o envelope <code>--output-format json</code> como contrato — falha o passo do CI se o JSON estiver malformado em vez de deixar o consumidor downstream consumir lixo.</li>
+            <li>Usa o modo <code>bypassPermissions</code> <i>só</i> em CI, nunca numa workstation de verdade. Sandboxes de CI são efêmeras; o <code>~</code> do seu laptop não é.</li>
+          </ol>
+
+          <a class="mc-deep" href={`${masterclassPath}#m12`}>Aprofundar → Master Class §12 CI/CD &amp; Headless</a>
+        </div>
+        <a class="mc-next" href="#m8">Próximo → §8 · Limitações &amp; anti-padrões</a>
+      </section>
+
+      <!-- §8 · ANTI-PADRÕES -->
+      <section id="m8" class="mc-mod mc-mod-production">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§8</span>
+          <h2 class="mc-mod-h">Limitações &amp; Anti-padrões</h2>
+          <span class="mc-mod-tag">produção</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — cinco modos de falha queimam dinheiro ou colocam código ruim no ar. Lê esses antes de setar seu primeiro goal de longa duração.</p>
+
+          <p class="mc-mini-h">▸ #1 — A condição não é observável</p>
+          <p>"Deixa o app production-ready" nunca consegue ser provado num transcript. O evaluator não tem noção de "ready"; só consegue checar o que o Claude printou. Sintoma: cada turno o evaluator diz "ainda não" e o loop roda pra sempre. <b>Correção:</b> reescreve como uma lista de estados finais contáveis ("0 erros de lint, 0 erros de tipo, todos os testes passam, &gt;80% de cobertura de linha medida por <code>vitest --coverage</code>").</p>
+
+          <p class="mc-mini-h">▸ #2 — O worker "conserta" deletando</p>
+          <p>"Todos os testes passam" pode ser satisfeito deletando os testes que falham. Sintoma: goal atinge em 3 turnos, suite está vazia. <b>Correção:</b> adiciona uma restrição — "nenhum arquivo de teste é deletado; <code>git diff --name-only test/</code> mostra só modificações, não deleções".</p>
+
+          <p class="mc-mini-h">▸ #3 — Goals compostos sobrecarregam o worker</p>
+          <p>"Migra o DB E refatora o parser E escreve a doc" é estados finais independentes demais. O worker faz context-switch, o evaluator se confunde com sinais misturados, o loop nunca converge. <b>Correção:</b> sequencia eles — três goals, um de cada vez, seta o próximo quando o anterior atingir.</p>
+
+          <p class="mc-mini-h">▸ #4 — Sem cap de turno num goal exploratório</p>
+          <p>Goals em tarefas onde não está claro quantos turnos são necessários (debugar um flake, explorar uma codebase desconhecida) facilmente rodam 100+ turnos. <b>Correção:</b> sempre inclui <code>"ou para depois de N turnos"</code> pra trabalho exploratório. Você sempre pode setar outro goal depois.</p>
+
+          <p class="mc-mini-h">▸ #5 — Confiar na entrada "achieved"</p>
+          <p>O evaluator pode estar errado. "Sim os testes passam" pode significar "o último comando <code>npm test</code> que o Claude rodou saiu com exit 0" — mas o Claude pode ter stubado a assertion que falhava. <b>Correção:</b> pra goals de alto risco, adiciona um check externo (uma execução separada de CI, um code review) depois que o goal atinge. <code>/goal</code> é um focador forte de atenção, não um substituto pra review.</p>
+
+          <p class="mc-mini-h">▸ Quando NÃO usar /goal de jeito nenhum</p>
+          <ul>
+            <li><b>Edições rápidas.</b> Um fix de duas linhas não precisa de loop; só pede.</li>
+            <li><b>Trabalho genuinamente exploratório.</b> Se você não sabe como "pronto" se parece, <code>/goal</code> não é a ferramenta. Tenta <code>/loop</code> com um intervalo de polling, ou só itera.</li>
+            <li><b>Trabalho que exige julgamento humano por turno.</b> Code review, decisões de design, qualquer coisa com aceitação subjetiva. O evaluator não consegue ver seu gosto.</li>
+          </ul>
+
+          <a class="mc-deep" href={`${masterclassPath}#m4`}>Aprofundar → Master Class §4 Permissões (combina /goal com caps + deny lists)</a>
+        </div>
+      </section>
+
+      <footer class="mc-foot">
+        <div class="mc-foot-band">
+          <span class="mc-tag">DEFINE A LINHA DE CHEGADA</span>
+          <span class="mc-foot-sep">|</span>
+          <span class="mc-tag">SAI DE PERTO · OU NÃO</span>
+        </div>
+        <p class="mc-foot-next">
+          Pra onde ir agora:
+          <a href={masterclassPath}>Master Class principal</a> · <a href={cookbookPath}>Hook Cookbook</a> · <a href={cheatsheetPath}>cheatsheet denso</a> · <a href="https://code.claude.com/docs/en/goal" target="_blank" rel="noopener">docs oficiais do /goal</a> · <a href={REPO_URL} target="_blank" rel="noopener">repo</a>.
+        </p>
+        <p class="mc-foot-sources">
+          Fontes: <a href="https://code.claude.com/docs/en/goal" target="_blank" rel="noopener">code.claude.com/docs/en/goal</a> · <a href="https://blog.dailydoseofds.com/p/claude-codes-goal-command" target="_blank" rel="noopener">Avi Chawla — Daily Dose of DS</a> · <a href="https://github.com/jthack/claude-goal" target="_blank" rel="noopener">jthack/claude-goal</a> (pré-oficial) · <a href="https://venturebeat.com/orchestration/claude-codes-goals-separates-the-agent-that-works-from-the-one-that-decides-its-done" target="_blank" rel="noopener">VentureBeat</a> · <a href="https://x.com/akshay_pachaar/status/2054915602171723992" target="_blank" rel="noopener">Akshay Pachaar</a>.
+        </p>
+      </footer>
+
+    </main>
+
+    <style is:global>
+      :root[data-theme="poster"] {
+        --p-bg: #0a0e1f;
+        --p-bg-2: #0e1530;
+        --p-ink: #e5e7eb;
+        --p-ink-dim: #9ca3af;
+        --p-ink-faint: #6b7280;
+        --p-green: #39ff14;
+        --p-orange: #ff9933;
+        --p-red: #ff4d4d;
+        --p-cyan: #00e5ff;
+        --p-magenta: #ff44ff;
+        --p-violet: #a78bfa;
+        --p-yellow: #ffe066;
+        --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+      }
+      html, body { background: var(--p-bg); color: var(--p-ink); overflow-x: clip; }
+      .mc-page, .mc-mod, .mc-mod-body, .mc-top { min-width: 0; }
+      .mc-body { font-family: var(--font-sans); margin: 0; background: radial-gradient(ellipse at top, var(--p-bg-2), var(--p-bg) 70%); min-height: 100vh; padding: 0 0 60px; overflow-x: clip; overflow-wrap: anywhere; max-width: 100%; }
+      .mc-top { display: flex; align-items: center; padding: 14px 32px 0; font-family: var(--font-mono); font-size: 11px; gap: 16px; flex-wrap: wrap; }
+      .mc-top-tools { margin-left: auto; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+      .mc-back { color: var(--p-cyan); text-decoration: none; letter-spacing: 0.04em; border-bottom: 1px dashed transparent; }
+      .mc-back:hover { border-bottom-color: var(--p-cyan); }
+      .mc-tool-btn { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; color: var(--p-orange); background: transparent; border: 1px solid rgba(255,153,51,0.4); border-radius: 2px; padding: 3px 10px; cursor: pointer; }
+      .mc-tool-btn:hover { color: var(--p-yellow); border-color: var(--p-yellow); }
+
+      .mc-page { max-width: 900px; margin: 0 auto; padding: 24px 32px; }
+      @media (max-width: 720px) { .mc-page { padding: 16px; } }
+
+      .mc-banner { text-align: center; margin-bottom: 30px; }
+      .mc-strip { font-family: var(--font-mono); font-size: 10.5px; color: var(--p-orange); letter-spacing: 0.12em; margin-bottom: 12px; display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; }
+      .mc-tag { white-space: nowrap; }
+      .mc-title { font-family: var(--font-mono); font-size: 56px; font-weight: 800; letter-spacing: -0.02em; margin: 8px 0 14px; line-height: 0.98; }
+      .mc-title-line { display: block; color: var(--p-ink); }
+      .mc-title-accent { color: var(--p-green); }
+      .mc-sub { color: var(--p-ink-dim); font-size: 14px; margin: 0; }
+      .mc-sub code { color: var(--p-orange); }
+      @media (max-width: 720px) { .mc-title { font-size: 38px; } .mc-strip { font-size: 9.5px; gap: 10px; } }
+
+      .mc-intro { background: rgba(0,0,0,0.3); border-left: 3px solid var(--p-cyan); border-radius: 2px; padding: 18px 22px; margin: 18px 0 30px; font-size: 14px; line-height: 1.6; }
+      .mc-intro-h { font-family: var(--font-mono); font-size: 12px; color: var(--p-cyan); letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 8px; }
+      .mc-intro-h + p, .mc-intro-h + ul { margin-top: 0; }
+      .mc-intro p { margin: 0 0 14px; color: var(--p-ink); }
+      .mc-intro-ul { margin: 0 0 14px; padding-left: 20px; color: var(--p-ink); }
+      .mc-intro-ul li { margin-bottom: 4px; }
+      .mc-intro code { color: var(--p-orange); font-family: var(--font-mono); }
+
+      .mc-toc { background: rgba(0,0,0,0.3); border-left: 3px solid var(--p-magenta); border-radius: 2px; padding: 16px 22px; margin-bottom: 36px; }
+      .mc-toc-h { font-family: var(--font-mono); font-size: 11px; color: var(--p-magenta); letter-spacing: 0.08em; margin-bottom: 10px; font-weight: 700; }
+      .mc-toc-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 18px; }
+      @media (max-width: 720px) { .mc-toc-list { grid-template-columns: 1fr; } }
+      .mc-toc-list a { display: flex; align-items: baseline; gap: 10px; padding: 6px 0; color: var(--p-ink); text-decoration: none; font-family: var(--font-mono); font-size: 12.5px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+      .mc-toc-list a:hover { color: var(--p-cyan); }
+      .mc-toc-n { color: var(--p-orange); font-weight: 700; min-width: 30px; }
+      .mc-toc-t { flex: 1; }
+      .mc-toc-tag { font-size: 9.5px; color: var(--p-ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
+      .mc-toc-list a[data-tag="fundamentos"] .mc-toc-tag { color: var(--p-cyan); }
+      .mc-toc-list a[data-tag="prática"]       .mc-toc-tag { color: var(--p-magenta); }
+      .mc-toc-list a[data-tag="internos"]   .mc-toc-tag { color: var(--p-violet); }
+      .mc-toc-list a[data-tag="produção"]  .mc-toc-tag { color: var(--p-yellow); }
+
+      .mc-mod { margin-bottom: 48px; scroll-margin-top: 20px; }
+      .mc-mod-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+      .mc-mod-n { font-family: var(--font-mono); font-size: 22px; font-weight: 800; color: var(--p-orange); }
+      .mc-mod-h { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--p-ink); margin: 0; flex: 1; letter-spacing: -0.01em; }
+      .mc-mod-tag { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--p-ink-faint); }
+      .mc-mod-foundations .mc-mod-tag { color: var(--p-cyan); }
+      .mc-mod-craft       .mc-mod-tag { color: var(--p-magenta); }
+      .mc-mod-internals   .mc-mod-tag { color: var(--p-violet); }
+      .mc-mod-production  .mc-mod-tag { color: var(--p-yellow); }
+      .mc-mod-body { font-size: 14px; line-height: 1.65; color: var(--p-ink); }
+      .mc-mod-body code { color: var(--p-orange); font-family: var(--font-mono); font-size: 12.5px; }
+      .mc-mod-body p { margin: 0 0 14px; }
+      .mc-mod-body ul, .mc-mod-body ol { margin: 0 0 14px; padding-left: 22px; }
+      .mc-mod-body li { margin-bottom: 4px; }
+      .mc-mod-body strong, .mc-mod-body b { color: var(--p-ink); }
+
+      .mc-tldr { background: rgba(0,229,255,0.06); border-left: 3px solid var(--p-cyan); padding: 10px 14px; font-size: 14px; margin: 0 0 18px; border-radius: 2px; }
+      .mc-tldr b { color: var(--p-cyan); margin-right: 6px; letter-spacing: 0.06em; }
+      .mc-mod-body .mc-mini-h { font-family: var(--font-mono); font-size: 11px; color: var(--p-magenta); letter-spacing: 0.06em; text-transform: uppercase; margin: 18px 0 8px; }
+      .mc-mod-body pre { background: rgba(0,0,0,0.4); border-left: 2px solid var(--p-green); padding: 10px 14px; font-size: 12px; color: var(--p-ink); overflow-x: auto; margin: 8px 0 16px; border-radius: 2px; }
+      .mc-mod-body pre code { color: var(--p-ink); }
+      .mc-mod-body .mc-diagram { background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.1); padding: 12px 14px; margin: 10px 0 16px; border-radius: 2px; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.5; color: var(--p-ink); white-space: pre; overflow-x: auto; }
+      .mc-mod-body .mc-diagram .d-key { color: var(--p-orange); }
+      .mc-mod-body .mc-diagram .d-dim { color: var(--p-ink-faint); }
+      .mc-mod-body .mc-diagram .d-acc { color: var(--p-cyan); }
+      .mc-mod-body .mc-diagram .d-mag { color: var(--p-magenta); }
+      .mc-mod-body .mc-deep { display: inline-block; font-family: var(--font-mono); font-size: 11.5px; color: var(--p-yellow); margin-top: 4px; padding: 4px 0; border-bottom: 1px dashed var(--p-yellow); }
+      .mc-mod-body .mc-deep:hover { color: var(--p-orange); border-bottom-color: var(--p-orange); }
+      .mc-next { display: inline-block; font-family: var(--font-mono); font-size: 11.5px; color: var(--p-green); margin-top: 18px; padding: 6px 0; text-decoration: none; letter-spacing: 0.04em; border-bottom: 1px dashed var(--p-green); }
+      .mc-next:hover { color: var(--p-orange); border-bottom-color: var(--p-orange); }
+
+      .mc-foot { margin-top: 50px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.08); text-align: center; }
+      .mc-foot-band { font-family: var(--font-mono); font-size: 11px; color: var(--p-green); letter-spacing: 0.12em; margin-bottom: 14px; }
+      .mc-foot-sep { color: var(--p-ink-faint); margin: 0 14px; }
+      .mc-foot-next, .mc-foot-sources { font-size: 13px; color: var(--p-ink-dim); margin: 6px 0; }
+      .mc-foot-sources { font-size: 11.5px; color: var(--p-ink-faint); }
+      .mc-foot-next a, .mc-foot-sources a { color: var(--p-cyan); text-decoration: none; border-bottom: 1px dashed transparent; }
+      .mc-foot-next a:hover, .mc-foot-sources a:hover { border-bottom-color: var(--p-cyan); }
+
+      @media print {
+        @page { margin: 14mm 12mm; size: A4; }
+        html, body, .mc-body { background: #fff !important; color: #111 !important; }
+        .mc-top, .mc-toc, .mc-next, .mc-foot-band, .mc-back, .mc-tool-btn { display: none !important; }
+        .mc-page { max-width: none; padding: 0; margin: 0; }
+        .mc-banner { margin-bottom: 12mm; page-break-after: avoid; }
+        .mc-strip { color: #555 !important; }
+        .mc-title { color: #111 !important; font-size: 30pt; }
+        .mc-title-accent { color: #111 !important; }
+        .mc-sub { color: #444 !important; font-size: 10pt; }
+        .mc-intro { background: #fafafa !important; border-left-color: #888 !important; color: #111 !important; page-break-after: always; font-size: 10pt; }
+        .mc-intro-h { color: #111 !important; }
+        .mc-intro code { color: #b04500 !important; }
+        .mc-mod { page-break-before: always; page-break-inside: avoid; margin-bottom: 0; }
+        .mc-mod:first-of-type { page-break-before: auto; }
+        .mc-mod-head { border-bottom-color: #ccc !important; }
+        .mc-mod-n, .mc-mod-h { color: #111 !important; }
+        .mc-mod-tag { color: #666 !important; }
+        .mc-mod-body { color: #111 !important; font-size: 10pt; line-height: 1.55; }
+        .mc-mod-body code { color: #b04500 !important; }
+        .mc-tldr { background: #fff7e6 !important; border-left-color: #d97706 !important; color: #111 !important; }
+        .mc-tldr b { color: #d97706 !important; }
+        .mc-mini-h { color: #666 !important; }
+        .mc-mod-body pre, .mc-mod-body .mc-diagram { background: #f4f4f4 !important; border-left-color: #888 !important; color: #111 !important; font-size: 9pt; page-break-inside: avoid; }
+        .mc-mod-body .mc-diagram .d-key { color: #b04500 !important; }
+        .mc-mod-body .mc-diagram .d-dim { color: #777 !important; }
+        .mc-mod-body .mc-diagram .d-acc { color: #0066aa !important; }
+        .mc-mod-body .mc-diagram .d-mag { color: #8b008b !important; }
+        .mc-mod-body .mc-deep { color: #0066aa !important; border-bottom-color: #0066aa !important; }
+        .mc-mod-body .mc-deep::after { content: " (" attr(href) ")"; font-size: 8pt; color: #777; }
+        .mc-foot { border-top: 1px solid #ccc; margin-top: 8mm; padding-top: 4mm; }
+        .mc-foot-next, .mc-foot-sources { color: #444 !important; font-size: 9pt; }
+        .mc-foot-next a, .mc-foot-sources a { color: #0066aa !important; }
+        .mc-foot-next a::after, .mc-foot-sources a::after { content: " (" attr(href) ")"; font-size: 8pt; color: #777; }
+      }
+    </style>
+
+    <script is:inline>
+      (() => {
+        const btn = document.getElementById("mc-print");
+        if (btn) btn.addEventListener("click", () => window.print());
+      })();
+    </script>
+  </body>
+</html>
