@@ -145,8 +145,8 @@ const pageDesc = `Póster de referencia de una página para Claude Code v${CC_VE
       <section class="grid">
         <!-- EXECUTION MODES -->
         <article class="card card-green" style="grid-area: modes">
-          <h2 class="card-h" data-myth-icon="🎙️" data-myth-name="The Many Voices">▸ EXECUTION MODES</h2>
-          <p class="card-sub">how the session is shaped</p>
+          <h2 class="card-h" data-myth-icon="🎙️" data-myth-name="The Many Voices">▸ MODOS DE EJECUCIÓN</h2>
+          <p class="card-sub">cómo se moldea la sesión</p>
           <dl class="flags">
             <dt><span class="dim">(default)</span></dt>
             <dd>Interactive REPL. The 90% case.</dd>
@@ -167,8 +167,8 @@ const pageDesc = `Póster de referencia de una página para Claude Code v${CC_VE
 
         <!-- MODEL & EFFORT -->
         <article class="card card-orange" style="grid-area: model">
-          <h2 class="card-h" data-myth-icon="🧠" data-myth-name="The Brainpan">▸ MODEL &amp; EFFORT</h2>
-          <p class="card-sub">how much brain to bring</p>
+          <h2 class="card-h" data-myth-icon="🧠" data-myth-name="The Brainpan">▸ MODELO &amp; ESFUERZO</h2>
+          <p class="card-sub">cuánto cerebro traer</p>
           <dl class="flags">
             <dt><code>--model</code> <span class="arg">&lt;alias|id&gt;</span></dt>
             <dd><code>opus</code> · <code>sonnet</code> · <code>haiku</code> · full id.</dd>
@@ -185,8 +185,8 @@ const pageDesc = `Póster de referencia de una página para Claude Code v${CC_VE
 
         <!-- PERMISSIONS & SAFETY -->
         <article class="card card-red" style="grid-area: perms">
-          <h2 class="card-h" data-myth-icon="🛡️" data-myth-name="The Wardens">▸ PERMISSIONS &amp; SAFETY</h2>
-          <p class="card-sub">what the agent can touch</p>
+          <h2 class="card-h" data-myth-icon="🛡️" data-myth-name="The Wardens">▸ PERMISOS &amp; SEGURIDAD</h2>
+          <p class="card-sub">qué puede tocar el agent</p>
           <dl class="flags">
             <dt><code>--permission-mode</code> <span class="arg">&lt;mode&gt;</span></dt>
             <dd>
@@ -218,7 +218,7 @@ const pageDesc = `Póster de referencia de una página para Claude Code v${CC_VE
             <dt><code>--allow-dangerously-skip-permissions</code></dt>
             <dd>Enables the toggle UI without activating it.</dd>
           </dl>
-          <p class="card-sub" style="margin-top:8px">matcher patterns</p>
+          <p class="card-sub" style="margin-top:8px">patrones de matcher</p>
           <dl class="flags">
             <dt><code>Bash(git *)</code></dt><dd>any <code>git</code> verb</dd>
             <dt><code>Bash(npm install:*)</code></dt><dd><code>npm install</code> with any args</dd>
@@ -229,7 +229,7 @@ const pageDesc = `Póster de referencia de una página para Claude Code v${CC_VE
           <p class="mini" style="margin-top:6px">
             <b>precedence:</b> <span class="kv warn">deny</span> beats <span class="kv">allow</span>, always.
           </p>
-          <p class="card-sub" style="margin-top:6px">auto-mode defaults</p>
+          <p class="card-sub" style="margin-top:6px">defaults del modo auto</p>
           <p class="mini">
             <code>Read</code> · <code>Glob</code> · <code>Grep</code> → silent allow.
             <code>Bash</code> · <code>Edit</code> · <code>Write</code> · MCP → classifier-decides per-call.
@@ -238,8 +238,8 @@ const pageDesc = `Póster de referencia de una página para Claude Code v${CC_VE
 
         <!-- CONFIG & CONTEXT -->
         <article class="card card-cyan" style="grid-area: config">
-          <h2 class="card-h" data-myth-icon="📜" data-myth-name="The Codex">▸ CONFIG &amp; CONTEXT</h2>
-          <p class="card-sub">what the agent loads on start</p>
+          <h2 class="card-h" data-myth-icon="📜" data-myth-name="The Codex">▸ CONFIG &amp; CONTEXTO</h2>
+          <p class="card-sub">qué carga el agent al iniciar</p>
           <dl class="flags two-col">
             <dt><code>--settings</code> <span class="arg">&lt;file|json&gt;</span></dt>
             <dd>Extra settings (file or inline JSON).</dd>
@@ -268,8 +268,8 @@ const pageDesc = `Póster de referencia de una página para Claude Code v${CC_VE
 
         <!-- SPECIAL MODES -->
         <article class="card card-magenta" style="grid-area: special">
-          <h2 class="card-h" data-myth-icon="🌙" data-myth-name="The Liminal Paths">▸ SPECIAL MODES</h2>
-          <p class="card-sub">change the whole posture</p>
+          <h2 class="card-h" data-myth-icon="🌙" data-myth-name="The Liminal Paths">▸ MODOS ESPECIALES</h2>
+          <p class="card-sub">cambia la postura entera</p>
           <dl class="flags">
             <dt><code>--bare</code></dt>
             <dd>
@@ -296,8 +296,8 @@ const pageDesc = `Póster de referencia de una página para Claude Code v${CC_VE
 
         <!-- I/O & FORMAT -->
         <article class="card card-yellow" style="grid-area: io">
-          <h2 class="card-h" data-myth-icon="📡" data-myth-name="The Conduits">▸ I/O &amp; FORMAT</h2>
-          <p class="card-sub">automation surface · <code>--print</code> only</p>
+          <h2 class="card-h" data-myth-icon="📡" data-myth-name="The Conduits">▸ I/O &amp; FORMATO</h2>
+          <p class="card-sub">superficie de automatización · <code>--print</code> only</p>
           <dl class="flags">
             <dt><code>--output-format</code> <span class="arg">text|json|stream-json</span></dt>
             <dd>Single result vs realtime stream.</dd>
@@ -320,8 +320,8 @@ const pageDesc = `Póster de referencia de una página para Claude Code v${CC_VE
 
         <!-- MISC -->
         <article class="card card-violet" style="grid-area: misc">
-          <h2 class="card-h" data-myth-icon="🔎" data-myth-name="The Scrutineers">▸ MISC &amp; DEBUG</h2>
-          <p class="card-sub">small but useful</p>
+          <h2 class="card-h" data-myth-icon="🔎" data-myth-name="The Scrutineers">▸ VARIOS &amp; DEBUG</h2>
+          <p class="card-sub">pequeño pero útil</p>
           <dl class="flags">
             <dt><code>-d, --debug</code> <span class="arg">[filter]</span></dt>
             <dd>e.g. <code>"api,hooks"</code> or <code>"!1p,!file"</code></dd>
@@ -344,7 +344,7 @@ const pageDesc = `Póster de referencia de una página para Claude Code v${CC_VE
 
         <!-- SUBCOMMANDS -->
         <article class="card card-pink" style="grid-area: sub">
-          <h2 class="card-h" data-myth-icon="⚔️" data-myth-name="The Lieutenants">▸ SUBCOMMANDS</h2>
+          <h2 class="card-h" data-myth-icon="⚔️" data-myth-name="The Lieutenants">▸ SUBCOMANDOS</h2>
           <p class="card-sub"><code>claude &lt;cmd&gt; ...</code></p>
           <dl class="flags">
             <dt><code>auth</code></dt>
@@ -387,7 +387,7 @@ const pageDesc = `Póster de referencia de una página para Claude Code v${CC_VE
         <!-- SETTINGS -->
         <article class="card card-orange" style="grid-area: settings">
           <h2 class="card-h" data-myth-icon="🏛️" data-myth-name="The Constitution">▸ SETTINGS — <code>settings.json</code></h2>
-          <p class="card-sub">precedence chain · TOP WINS</p>
+          <p class="card-sub">cadena de precedencia · ARRIBA GANA</p>
           <ol class="chain">
             <li><code>managed / enterprise policy</code> <span class="arg">MDM-installed · highest authority</span></li>
             <li><code>--settings &lt;file|json&gt;</code> <span class="arg">CLI flag · per-invocation override</span></li>
@@ -395,7 +395,7 @@ const pageDesc = `Póster de referencia de una página para Claude Code v${CC_VE
             <li><code>&lt;proj&gt;/.claude/settings.json</code> <span class="arg">project · git-tracked, ships to team</span></li>
             <li><code>~/.claude/settings.json</code> <span class="arg">user-global · per-machine</span></li>
           </ol>
-          <p class="card-sub" style="margin-top:10px">top-level keys</p>
+          <p class="card-sub" style="margin-top:10px">claves de nivel superior</p>
           <dl class="flags two-col">
             <dt><code>permissions</code></dt>
             <dd><code>defaultMode</code> · <code>allow[]</code> · <code>deny[]</code> · <code>additionalDirectories[]</code></dd>
@@ -412,7 +412,7 @@ const pageDesc = `Póster de referencia de una página para Claude Code v${CC_VE
             <dt><code>mcpServers</code></dt>
             <dd>Inline MCP defs; or use <code>.mcp.json</code> at repo root.</dd>
             <dt><code>enableAllProjectMcpServers</code></dt>
-            <dd>Boolean trust gate for <code>.mcp.json</code>.</dd>
+            <dd>Boolean puerta de trust for <code>.mcp.json</code>.</dd>
             <dt><code>outputStyle</code> · <code>theme</code></dt>
             <dd>UI presets.</dd>
             <dt><code>$schema</code></dt>
@@ -433,7 +433,7 @@ const pageDesc = `Póster de referencia de una página para Claude Code v${CC_VE
 
         <!-- HOOKS -->
         <article class="card card-cyan" style="grid-area: hooks">
-          <h2 class="card-h" data-myth-icon="⛩️" data-myth-name="The Pantheon">▸ HOOKS — 29 LIFECYCLE EVENTS</h2>
+          <h2 class="card-h" data-myth-icon="⛩️" data-myth-name="The Pantheon">▸ HOOKS — 29 EVENTOS DE CICLO DE VIDA</h2>
           <p class="card-sub">stdin-JSON in · stdout/stderr + exit-code out</p>
 
           <div class="hooks-groups">
@@ -501,9 +501,9 @@ const pageDesc = `Póster de referencia de una página para Claude Code v${CC_VE
 
         <!-- CLAUDE.md -->
         <article class="card card-cyan" style="grid-area: claudemd">
-          <h2 class="card-h" data-myth-icon="📖" data-myth-name="The Charter">▸ CLAUDE.md — context discovery</h2>
-          <p class="card-sub">auto-loaded into system prompt every session</p>
-          <p class="card-sub" style="margin-top:8px">hierarchy · all merge</p>
+          <h2 class="card-h" data-myth-icon="📖" data-myth-name="The Charter">▸ CLAUDE.md — descubrimiento de contexto</h2>
+          <p class="card-sub">cargado en el system prompt cada sesión</p>
+          <p class="card-sub" style="margin-top:8px">jerarquía · todos suman</p>
           <dl class="flags">
             <dt>📁 <code>~/.claude/CLAUDE.md</code></dt>
             <dd>user-global · per-machine preferences.</dd>
@@ -512,13 +512,13 @@ const pageDesc = `Póster de referencia de una página para Claude Code v${CC_VE
             <dt>📁 <code>&lt;proj&gt;/&lt;sub&gt;/CLAUDE.md</code></dt>
             <dd>nested · loads when cwd is inside subdir (ancestor-walk).</dd>
           </dl>
-          <p class="card-sub" style="margin-top:8px">imports (compose)</p>
+          <p class="card-sub" style="margin-top:8px">imports (componen)</p>
           <dl class="flags">
             <dt><code>@./other.md</code></dt><dd>relative to current file</dd>
             <dt><code>@~/.claude/snippet.md</code></dt><dd>user-home expansion</dd>
             <dt><code>@/abs/path.md</code></dt><dd>absolute path</dd>
           </dl>
-          <p class="card-sub" style="margin-top:8px">path-scoped (load on demand)</p>
+          <p class="card-sub" style="margin-top:8px">con alcance de path (carga bajo demanda)</p>
 <pre class="fm-pre"><code>{`---
 paths: ["src/**", "tests/**"]
 ---
@@ -526,11 +526,11 @@ body…`}</code></pre>
           <p class="mini">
             Fires <code>InstructionsLoaded</code> with <code>reason: path_glob_match</code> · dedup: 1 event per rule per session.
           </p>
-          <p class="card-sub" style="margin-top:8px">reload triggers</p>
+          <p class="card-sub" style="margin-top:8px">disparadores de reload</p>
           <p class="mini">
             <code>/memory</code> edits → next turn · <code>/clear</code> / <code>/compact</code> → <code>SessionStart</code> fires · fresh session → discovery walks ancestors again.
           </p>
-          <p class="card-sub" style="margin-top:8px">best practices</p>
+          <p class="card-sub" style="margin-top:8px">buenas prácticas</p>
           <ul class="builtins">
             <li><b>≤ 200 lines</b> — longer ones are silently truncated / ignored</li>
             <li><b>precision</b> — "use Zod for validation" beats "be clean"</li>
@@ -542,15 +542,15 @@ body…`}</code></pre>
         <!-- MCP -->
         <article class="card card-magenta" style="grid-area: mcp">
           <h2 class="card-h" data-myth-icon="🪐" data-myth-name="The Outer Realms">▸ MCP — Model Context Protocol</h2>
-          <p class="card-sub">extend Claude with external tool servers</p>
-          <p class="card-sub" style="margin-top:8px">scope</p>
+          <p class="card-sub">extiende Claude con servidores externos de tools</p>
+          <p class="card-sub" style="margin-top:8px">alcance</p>
           <dl class="flags">
             <dt>📁 <code>&lt;proj&gt;/.mcp.json</code></dt>
             <dd>project · git-tracked.</dd>
             <dt>📁 <code>~/.claude/mcp.json</code></dt>
             <dd>user · per-machine.</dd>
             <dt><code>--mcp-config</code> <span class="arg">&lt;file&gt;</span></dt>
-            <dd>per-invocation · overrides scope. Pair with <code>--strict-mcp-config</code> to ignore others.</dd>
+            <dd>per-invocation · overrides alcance. Pair with <code>--strict-mcp-config</code> to ignore others.</dd>
           </dl>
           <p class="card-sub" style="margin-top:8px"><code>.mcp.json</code> shape</p>
 <pre class="fm-pre"><code>{`{
@@ -565,18 +565,18 @@ body…`}</code></pre>
     }
   }
 }`}</code></pre>
-          <p class="card-sub" style="margin-top:8px">naming · discovery</p>
+          <p class="card-sub" style="margin-top:8px">nombrado · descubrimiento</p>
           <dl class="flags">
             <dt><code>mcp__&lt;srv&gt;__&lt;tool&gt;</code></dt>
             <dd>How tools appear to Agent / Skill / model.</dd>
             <dt><code>/mcp__&lt;srv&gt;__&lt;prompt&gt;</code></dt>
             <dd>MCP-provided slash commands (server prompts).</dd>
           </dl>
-          <p class="card-sub" style="margin-top:8px">trust gate</p>
+          <p class="card-sub" style="margin-top:8px">puerta de trust</p>
           <p class="mini">
             <code>enableAllProjectMcpServers: true</code> auto-trusts <code>.mcp.json</code>; else user prompted on first use.
           </p>
-          <p class="card-sub" style="margin-top:8px">common servers</p>
+          <p class="card-sub" style="margin-top:8px">servidores comunes</p>
           <ul class="builtins">
             <li><code>playwright</code> browser automation + DOM snapshots</li>
             <li><code>chrome-devtools</code> network / perf observability</li>
@@ -589,7 +589,7 @@ body…`}</code></pre>
         <!-- SKILLS -->
         <article class="card card-magenta" style="grid-area: skills">
           <h2 class="card-h" data-myth-icon="✨" data-myth-name="The Incantations">▸ SKILLS — <code>/&lt;name&gt;</code></h2>
-          <p class="card-sub">slash commands · prompt-as-markdown</p>
+          <p class="card-sub">slash commands · prompt-como-markdown</p>
           <dl class="flags">
             <dt>📁 <code>.claude/skills/&lt;name&gt;/SKILL.md</code></dt>
             <dd>project skill (ships in repo).</dd>
@@ -627,14 +627,14 @@ agent: my-agent         # delegated agent
         <!-- AGENTS -->
         <article class="card card-violet" style="grid-area: agents">
           <h2 class="card-h" data-myth-icon="👁️" data-myth-name="The Disciples">▸ AGENTS — sub-agents</h2>
-          <p class="card-sub">isolated context · single return msg</p>
+          <p class="card-sub">contexto aislado · un solo mensaje de retorno</p>
           <dl class="flags">
             <dt>📁 <code>.claude/agents/&lt;name&gt;.md</code></dt>
             <dd>project agent (ships in repo).</dd>
             <dt>📁 <code>~/.claude/agents/&lt;name&gt;.md</code></dt>
             <dd>user agent.</dd>
           </dl>
-          <p class="card-sub" style="margin-top:8px">frontmatter (full)</p>
+          <p class="card-sub" style="margin-top:8px">frontmatter (completo)</p>
 <pre class="fm-pre"><code>{`---
 description: When to delegate to this agent
 tools: [Read, Grep, Bash]
@@ -647,7 +647,7 @@ maxTurns: 12
 isolation: worktree
 ---
 You are an X agent. Your job is …`}</code></pre>
-          <p class="card-sub" style="margin-top:8px">built-in agents</p>
+          <p class="card-sub" style="margin-top:8px">agents integrados</p>
           <ul class="builtins">
             <li><code>general-purpose</code> — open-ended research / multi-step</li>
             <li><code>Explore</code> — fast read-only code search</li>
@@ -664,8 +664,8 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- BUILT-IN TOOLS -->
         <article class="card card-green wide" style="grid-area: tools">
-          <h2 class="card-h" data-myth-icon="🧰" data-myth-name="The Arsenal">▸ BUILT-IN TOOLS — what the agent can invoke</h2>
-          <p class="card-sub">programmatic surface · gated by <code>--tools</code> / <code>--allowedTools</code> · hooks fire per call</p>
+          <h2 class="card-h" data-myth-icon="🧰" data-myth-name="The Arsenal">▸ TOOLS NATIVAS — lo que el agent puede invocar</h2>
+          <p class="card-sub">superficie programática · gated por <code>--tools</code> / <code>--allowedTools</code> · hooks fire per call</p>
           <div class="cmd-cols">
             <div class="cmd-col">
               <span class="cmd-h">filesystem</span>
@@ -710,8 +710,8 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- AUTHENTICATION -->
         <article class="card card-violet wide" style="grid-area: auth">
-          <h2 class="card-h" data-myth-icon="🔑" data-myth-name="The Sigil">▸ AUTHENTICATION — who pays for the tokens</h2>
-          <p class="card-sub">resolution order: managed → CLI flag → env var → keychain (OAuth) → <code>apiKeyHelper</code></p>
+          <h2 class="card-h" data-myth-icon="🔑" data-myth-name="The Sigil">▸ AUTENTICACIÓN — quién paga los tokens</h2>
+          <p class="card-sub">orden de resolución: managed → flag CLI → env var → keychain (OAuth) → <code>apiKeyHelper</code></p>
           <div class="cmd-cols">
             <div class="cmd-col">
               <span class="cmd-h">OAuth (default)</span>
@@ -754,8 +754,8 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- COST & TOKENS -->
         <article class="card card-cyan wide" style="grid-area: cost">
-          <h2 class="card-h" data-myth-icon="💰" data-myth-name="The Ledger">▸ COST &amp; TOKENS — bills you can see</h2>
-          <p class="card-sub">monitor · cache · swap · cap · the four habits that drop bills 60–70%</p>
+          <h2 class="card-h" data-myth-icon="💰" data-myth-name="The Ledger">▸ COSTE &amp; TOKENS — facturas que puedes ver</h2>
+          <p class="card-sub">monitorea · cache · swap · cap · los cuatro hábitos que bajan facturas 60–70%</p>
 
           <div class="dgm-wrap">
             <p class="dgm-h">▸ where tokens go (typical session)</p>
@@ -825,7 +825,7 @@ You are an X agent. Your job is …`}</code></pre>
         <!-- OUTPUT STYLES -->
         <article class="card card-orange" style="grid-area: output">
           <h2 class="card-h" data-myth-icon="🎭" data-myth-name="The Personas">▸ OUTPUT STYLES</h2>
-          <p class="card-sub">change Claude's response posture</p>
+          <p class="card-sub">cambia la postura de respuesta de Claude</p>
           <dl class="flags">
             <dt><code>/config</code> → output style</dt>
             <dd>Pick a style; applied to current session.</dd>
@@ -849,8 +849,8 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- PLUGIN AUTHORING -->
         <article class="card card-red" style="grid-area: plugin">
-          <h2 class="card-h" data-myth-icon="🪄" data-myth-name="The Bestowal">▸ PLUGIN AUTHORING</h2>
-          <p class="card-sub">distribute a bundle of skills · agents · rules · hooks</p>
+          <h2 class="card-h" data-myth-icon="🪄" data-myth-name="The Bestowal">▸ AUTORÍA DE PLUGIN</h2>
+          <p class="card-sub">distribuye un bundle de skills · agents · rules · hooks</p>
           <p class="card-sub" style="margin-top:6px">layout</p>
 <pre class="fm-pre"><code>{`my-plugin/
 ├── .claude-plugin/
@@ -859,7 +859,7 @@ You are an X agent. Your job is …`}</code></pre>
 ├── agents/<name>.md
 ├── rules/<name>.md
 └── hooks/*.sh`}</code></pre>
-          <p class="card-sub" style="margin-top:8px">install · session-only</p>
+          <p class="card-sub" style="margin-top:8px">install · solo sesión</p>
           <dl class="flags">
             <dt><code>--plugin-dir &lt;path&gt;</code></dt>
             <dd>directory or <code>.zip</code></dd>
@@ -872,8 +872,8 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- WORKFLOW PATTERNS -->
         <article class="card card-magenta wide" style="grid-area: workflow">
-          <h2 class="card-h" data-myth-icon="🎯" data-myth-name="The Tactics">▸ WORKFLOW PATTERNS — 5 shapes Claude takes</h2>
-          <p class="card-sub">pick by stakes · parallelism · specification level</p>
+          <h2 class="card-h" data-myth-icon="🎯" data-myth-name="The Tactics">▸ PATRONES DE WORKFLOW — 5 formas que toma Claude</h2>
+          <p class="card-sub">elige por stakes · paralelismo · nivel de especificación</p>
           <div class="cmd-cols">
             <div class="cmd-col">
               <span class="cmd-h">sequential</span>
@@ -924,7 +924,7 @@ You are an X agent. Your job is …`}</code></pre>
           </div>
           <p class="mini" style="margin-top:8px">
             <b>decision aid:</b>
-            unclear scope → <span class="kv">sequential</span> or <span class="kv">operator</span> ·
+            unclear alcance → <span class="kv">sequential</span> or <span class="kv">operator</span> ·
             parallel work → <span class="kv">split-merge</span> or <span class="kv">agent-teams</span> ·
             fully specced → <span class="kv">headless</span>.
           </p>
@@ -932,7 +932,7 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- COMMANDS -->
         <article class="card card-yellow wide" style="grid-area: commands">
-          <h2 class="card-h" data-myth-icon="⚒️" data-myth-name="Tools of the Trade">▸ SLASH COMMANDS — built-in</h2>
+          <h2 class="card-h" data-myth-icon="⚒️" data-myth-name="Tools of the Trade">▸ SLASH COMMANDS — integrados</h2>
           <p class="card-sub">type <code>/</code> in the prompt · MCP prompts appear as <code>/mcp__&lt;server&gt;__&lt;name&gt;</code></p>
           <div class="cmd-cols">
             <div class="cmd-col">
@@ -1030,8 +1030,8 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- ENV VARS -->
         <article class="card card-green wide" style="grid-area: envvars">
-          <h2 class="card-h" data-myth-icon="🎚️" data-myth-name="The Knobs of Fate">▸ ENV VARS — runtime knobs</h2>
-          <p class="card-sub">set in shell · in <code>env</code> key of settings.json · or <code>--settings</code></p>
+          <h2 class="card-h" data-myth-icon="🎚️" data-myth-name="The Knobs of Fate">▸ ENV VARS — controles de runtime</h2>
+          <p class="card-sub">define en shell · en <code>env</code> key of settings.json · or <code>--settings</code></p>
           <div class="cmd-cols env-cols">
             <div class="cmd-col">
               <span class="cmd-h">auth · provider</span>
@@ -1093,7 +1093,7 @@ You are an X agent. Your job is …`}</code></pre>
 
       <section class="lifecycle-section">
         <article class="card card-cyan wide">
-          <h2 class="card-h" data-myth-icon="🌀" data-myth-name="The Journey">▸ ONE PROMPT — END TO END</h2>
+          <h2 class="card-h" data-myth-icon="🌀" data-myth-name="The Journey">▸ UN PROMPT — DE PRINCIPIO A FIN</h2>
           <p class="card-sub">
             6 actors · time flows down · ▮ markers = where each hook fires · loop = agentic ReAct cycle
           </p>
@@ -1334,7 +1334,7 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- DECISION TRIPTYCH -->
         <article class="card card-yellow wide">
-          <h2 class="card-h" data-myth-icon="🧭" data-myth-name="The Compass">▸ DECISION COMPASSES — pick by priority</h2>
+          <h2 class="card-h" data-myth-icon="🧭" data-myth-name="The Compass">▸ BRÚJULAS DE DECISIÓN — elige por prioridad</h2>
           <p class="card-sub">three quick triages: permission · model · workflow</p>
           <div class="compass-trio">
 
@@ -1423,7 +1423,7 @@ You are an X agent. Your job is …`}</code></pre>
                 </defs>
                 <circle cx="160" cy="130" r="44" class="dgm-q" />
                 <text x="160" y="128" class="dgm-lbl" style="font-size:11px">SHAPE?</text>
-                <text x="160" y="142" class="dgm-lbl-sm">scope</text>
+                <text x="160" y="142" class="dgm-lbl-sm">alcance</text>
 
                 <line x1="160" y1="86" x2="160" y2="58" class="dgm-arr" marker-end="url(#ca3)" />
                 <g transform="translate(70, 14)">
@@ -1457,8 +1457,8 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- HOOK TAXONOMY RADIAL -->
         <article id="hooks-radial" class="card card-cyan wide">
-          <h2 class="card-h" data-myth-icon="⚛️" data-myth-name="The Sigils">▸ HOOK TAXONOMY — 29 events at a glance</h2>
-          <p class="card-sub">7 categories radiating from the agentic loop</p>
+          <h2 class="card-h" data-myth-icon="⚛️" data-myth-name="The Sigils">▸ TAXONOMÍA DE HOOKS — 29 eventos de un vistazo</h2>
+          <p class="card-sub">7 categorías irradiando del loop agéntico</p>
           <div style="display:flex;justify-content:center;padding:10px 0">
             <svg class="dgm-svg hk-radial" viewBox="0 0 700 540" xmlns="http://www.w3.org/2000/svg" style="max-width:720px">
 
@@ -1550,7 +1550,7 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- MCP ECOSYSTEM RADIAL -->
         <article id="mcp-radial" class="card card-magenta wide">
-          <h2 class="card-h" data-myth-icon="🛸" data-myth-name="The Constellation">▸ MCP ECOSYSTEM — Claude's outer surface</h2>
+          <h2 class="card-h" data-myth-icon="🛸" data-myth-name="The Constellation">▸ ECOSISTEMA MCP — superficie externa de Claude</h2>
           <p class="card-sub">5 mature servers connect Claude to the world · each exposes its tools via <code>mcp__&lt;srv&gt;__&lt;tool&gt;</code></p>
           <div style="display:flex;justify-content:center;padding:10px 0">
             <svg class="dgm-svg mcp-radial" viewBox="0 0 800 560" xmlns="http://www.w3.org/2000/svg" style="max-width:820px">
@@ -1627,10 +1627,10 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- AUTH CHAIN + TOOL TREE (combined) -->
         <article class="card card-orange wide">
-          <h2 class="card-h" data-myth-icon="🪢" data-myth-name="The Chains">▸ AUTH CHAIN · TOOL TREE — two hierarchies</h2>
-          <p class="card-sub">how Claude finds credentials · how Claude finds tools</p>
+          <h2 class="card-h" data-myth-icon="🪢" data-myth-name="The Chains">▸ CADENA DE AUTH · ÁRBOL DE TOOLS — dos jerarquías</h2>
+          <p class="card-sub">cómo Claude encuentra credenciales · cómo Claude encuentra tools</p>
 
-          <p class="card-sub" style="margin-top:8px">auth resolution chain · first match wins</p>
+          <p class="card-sub" style="margin-top:8px">cadena de resolución de auth · primer match gana</p>
           <div style="padding:8px 0">
             <svg class="dgm-svg auth-chain" viewBox="0 0 1200 160" xmlns="http://www.w3.org/2000/svg" style="max-width:1200px">
               <defs>
@@ -1719,7 +1719,7 @@ You are an X agent. Your job is …`}</code></pre>
                 <text x="80" y="18" class="dgm-lbl-sm">shell · 1</text>
                 <text x="80" y="40" class="dgm-lbl" style="font-size:14px">Bash</text>
                 <text x="80" y="68" class="dgm-lbl-sm">in $cwd</text>
-                <text x="80" y="92" class="dgm-lbl-sm">--allowedTools to scope</text>
+                <text x="80" y="92" class="dgm-lbl-sm">--allowedTools to alcance</text>
               </g>
 
               <g transform="translate(410, 90)">
@@ -1762,7 +1762,7 @@ You are an X agent. Your job is …`}</code></pre>
         <!-- ANATOMY OF .claude/ — user-global + project, grouped by function -->
         <article class="card card-green wide">
           <h2 class="card-h" data-myth-icon="🗺️" data-myth-name="The Cartography">▸ ANATOMY OF <code>.claude/</code> — every file CC reads or writes</h2>
-          <p class="card-sub">two scopes · five functions · what ships in PR vs what stays per-machine</p>
+          <p class="card-sub">two alcances · five functions · what ships in PR vs what stays per-machine</p>
           <div class="fs-map">
 
             <div class="fs-side" style="--c: var(--p-violet)">
@@ -1821,7 +1821,7 @@ You are an X agent. Your job is …`}</code></pre>
 
           </div>
 
-          <p class="card-sub" style="margin-top:10px">precedence &amp; load order</p>
+          <p class="card-sub" style="margin-top:10px">precedencia &amp; orden de carga</p>
           <p class="mini">
             <b>Settings:</b> managed-policy → CLI flags → <code>settings.local.json</code> → <code>.claude/settings.json</code> → <code>~/.claude/settings.json</code>. First match wins per key.
           </p>
@@ -1838,7 +1838,7 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- COST × MODEL FIT MATRIX -->
         <article id="cost-matrix" class="card card-cyan wide">
-          <h2 class="card-h" data-myth-icon="🎯" data-myth-name="The Right Tool">▸ COST × TASK × MODEL — pick once, save 70%</h2>
+          <h2 class="card-h" data-myth-icon="🎯" data-myth-name="The Right Tool">▸ COSTE × TASK × MODELO — elige una vez, ahorra 70%</h2>
           <p class="card-sub">where each model fits · diagonal is optimal · off-diagonal is over- or under-spec</p>
           <div style="display:flex;justify-content:center;padding:10px 0">
             <svg class="dgm-svg cost-matrix" viewBox="0 0 820 300" xmlns="http://www.w3.org/2000/svg" style="max-width:840px">
@@ -1898,7 +1898,7 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- HOOK FIRE FREQUENCY HEATMAP -->
         <article class="card card-yellow wide">
-          <h2 class="card-h" data-myth-icon="🔥" data-myth-name="The Pulse">▸ HOOK FIRE FREQUENCY — what runs how often</h2>
+          <h2 class="card-h" data-myth-icon="🔥" data-myth-name="The Pulse">▸ FRECUENCIA DE HOOKS — qué se ejecuta con qué frecuencia</h2>
           <p class="card-sub">typical session · the hot path is tool gates · everything else is occasional or rare</p>
           <div style="display:flex;justify-content:center;padding:10px 0">
             <svg class="dgm-svg hf-bars" viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg" style="max-width:820px">
@@ -1974,8 +1974,8 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- SKILL · AGENT · HOOK COMPOSITION -->
         <article id="composition" class="card card-violet wide">
-          <h2 class="card-h" data-myth-icon="🕸️" data-myth-name="The Weave">▸ SKILL · AGENT · HOOK — how a capacity composes</h2>
-          <p class="card-sub">3 layers built into the platform · invocation ▸ delegation ▸ gating</p>
+          <h2 class="card-h" data-myth-icon="🕸️" data-myth-name="The Weave">▸ SKILL · AGENT · HOOK — cómo se compone una capacidad</h2>
+          <p class="card-sub">3 capas integradas en la plataforma · invocación ▸ delegación ▸ gating</p>
           <div style="display:flex;justify-content:center;padding:10px 0">
             <svg class="dgm-svg comp-graph" viewBox="0 0 900 360" xmlns="http://www.w3.org/2000/svg" style="max-width:920px">
               <defs>
@@ -2082,7 +2082,7 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- SESSION STATE DIAGRAM -->
         <article class="card card-orange wide">
-          <h2 class="card-h" data-myth-icon="🔁" data-myth-name="The Cycle">▸ SESSION STATES — startup to end</h2>
+          <h2 class="card-h" data-myth-icon="🔁" data-myth-name="The Cycle">▸ ESTADOS DE SESIÓN — del startup al fin</h2>
           <p class="card-sub">what state your session is in at any time · how commands transition</p>
           <div style="display:flex;justify-content:center;padding:10px 0">
             <svg class="dgm-svg sess-state" viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg" style="max-width:920px">
@@ -2143,8 +2143,8 @@ You are an X agent. Your job is …`}</code></pre>
 
         <!-- COMPACTION INTERRUPT FLOW -->
         <article id="compaction-flow" class="card card-red wide">
-          <h2 class="card-h" data-myth-icon="🌀" data-myth-name="The Archive">▸ COMPACTION INTERRUPT — what happens during /compact</h2>
-          <p class="card-sub">how raw signal survives summarization · the PreCompact → SessionStart(compact) bridge</p>
+          <h2 class="card-h" data-myth-icon="🌀" data-myth-name="The Archive">▸ INTERRUPCIÓN DE COMPACTION — qué pasa durante /compact</h2>
+          <p class="card-sub">cómo la señal cruda sobrevive a la sumarización · el puente PreCompact → SessionStart(compact)</p>
           <div style="display:flex;justify-content:center;padding:10px 0">
             <svg class="dgm-svg cmp-flow" viewBox="0 0 1100 260" xmlns="http://www.w3.org/2000/svg" style="max-width:1100px">
               <defs>
@@ -2221,8 +2221,8 @@ You are an X agent. Your job is …`}</code></pre>
       <!-- ===== RECIPES — common combos ===== -->
       <section class="recipes-section">
         <article class="card card-green">
-          <h2 class="card-h" data-myth-icon="🍳" data-myth-name="The Grimoire">▸ RECIPES — COMMON COMBOS</h2>
-          <p class="card-sub">copy-paste defaults that pay back fast</p>
+          <h2 class="card-h" data-myth-icon="🍳" data-myth-name="The Grimoire">▸ RECETAS — COMBOS COMUNES</h2>
+          <p class="card-sub">defaults copia-pega que pagan rápido</p>
           <div class="recipes">
             <div class="recipe-block">
               <span class="recipe-h"># continue last session in this dir</span>
