@@ -1,0 +1,200 @@
+---
+// ResourcesMenu — single source of truth for cross-page nav across the
+// Claude Code learning surface (cheatsheet · master class · /goal class · cookbook).
+//
+// Add a new surface? Add a row to RESOURCES below and a slug to CurrentPage.
+// Every page that imports this component picks it up automatically.
+
+export type CurrentPage = "cheatsheet" | "masterclass" | "goal" | "cookbook";
+
+interface Props {
+  current: CurrentPage;
+  /** Override locale to point Master Class at translated variant. Defaults to "en". */
+  locale?: "en" | "pt" | "es";
+}
+
+const { current, locale = "en" } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const masterclassHref =
+  locale === "pt" ? `${base}/masterclass/pt/claude-code/` :
+  locale === "es" ? `${base}/masterclass/es/claude-code/` :
+                    `${base}/masterclass/claude-code/`;
+
+const RESOURCES: {
+  slug: CurrentPage;
+  num: string;
+  title: string;
+  desc: string;
+  href: string;
+}[] = [
+  {
+    slug: "cheatsheet",
+    num: "●",
+    title: "Cheatsheet",
+    desc: "Dense single-page reference — the hub",
+    href: `${base}/cheatsheet/claude-core/`,
+  },
+  {
+    slug: "masterclass",
+    num: "01",
+    title: "Master Class",
+    desc: "12-module guided walkthrough · ~60 min",
+    href: masterclassHref,
+  },
+  {
+    slug: "goal",
+    num: "02",
+    title: "/goal Class",
+    desc: "Deep dive on /goal · worker vs evaluator",
+    href: `${base}/masterclass/goal-command/`,
+  },
+  {
+    slug: "cookbook",
+    num: "03",
+    title: "Hook Cookbook",
+    desc: "10 production-ready hook recipes",
+    href: `${base}/cookbook/hooks/`,
+  },
+];
+---
+
+<details class="rm">
+  <summary class="rm-btn" aria-haspopup="menu">
+    <span>Resources</span>
+    <span class="rm-caret" aria-hidden="true">▾</span>
+  </summary>
+  <div class="rm-panel" role="menu">
+    {RESOURCES.map((r) => {
+      const isCurrent = r.slug === current;
+      return (
+        <a
+          href={r.href}
+          class="rm-item"
+          aria-current={isCurrent ? "page" : undefined}
+          role="menuitem"
+        >
+          <span class="rm-num">{r.num}</span>
+          <span class="rm-text">
+            <span class="rm-title">
+              {r.title}
+              {isCurrent && <span class="rm-here"> · you are here</span>}
+            </span>
+            <span class="rm-desc">{r.desc}</span>
+          </span>
+        </a>
+      );
+    })}
+  </div>
+</details>
+
+<style>
+  .rm {
+    position: relative;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 11px;
+  }
+  .rm-btn {
+    cursor: pointer;
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border: 1px solid rgba(255, 68, 255, 0.35);
+    border-radius: 2px;
+    color: var(--p-magenta, #ff44ff);
+    letter-spacing: 0.06em;
+    background: transparent;
+    user-select: none;
+  }
+  .rm-btn::-webkit-details-marker { display: none; }
+  .rm-btn::marker { display: none; content: ""; }
+  .rm-btn:hover {
+    color: var(--p-yellow, #ffe066);
+    border-color: var(--p-magenta, #ff44ff);
+  }
+  .rm[open] > .rm-btn {
+    background: rgba(255, 68, 255, 0.08);
+    color: var(--p-yellow, #ffe066);
+    border-color: var(--p-magenta, #ff44ff);
+  }
+  .rm-caret { transition: transform 0.15s; font-size: 9px; }
+  .rm[open] .rm-caret { transform: rotate(180deg); }
+
+  .rm-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 340px;
+    max-width: calc(100vw - 32px);
+    background: rgba(10, 14, 31, 0.98);
+    border: 1px solid rgba(255, 68, 255, 0.3);
+    border-radius: 2px;
+    padding: 6px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  }
+
+  .rm-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 10px;
+    text-decoration: none;
+    color: var(--p-ink, #e5e7eb);
+    border-radius: 2px;
+    border-left: 2px solid transparent;
+    transition: background 0.1s, border-left-color 0.1s;
+  }
+  .rm-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-left-color: var(--p-magenta, #ff44ff);
+  }
+  .rm-item[aria-current="page"] {
+    background: rgba(57, 255, 20, 0.06);
+    border-left-color: var(--p-green, #39ff14);
+  }
+
+  .rm-num {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 10.5px;
+    color: var(--p-magenta, #ff44ff);
+    font-weight: 700;
+    min-width: 18px;
+    padding-top: 2px;
+    letter-spacing: 0.04em;
+  }
+  .rm-item[aria-current="page"] .rm-num { color: var(--p-green, #39ff14); }
+
+  .rm-text { display: flex; flex-direction: column; gap: 2px; }
+  .rm-title {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--p-ink, #e5e7eb);
+    letter-spacing: 0.02em;
+  }
+  .rm-item[aria-current="page"] .rm-title { color: var(--p-green, #39ff14); }
+  .rm-here {
+    color: var(--p-ink-faint, #6b7280);
+    font-weight: 400;
+    font-size: 10.5px;
+    letter-spacing: 0;
+  }
+  .rm-desc {
+    font-size: 10.5px;
+    color: var(--p-ink-dim, #9ca3af);
+    line-height: 1.4;
+  }
+
+  @media (max-width: 600px) {
+    .rm-panel { min-width: 260px; }
+  }
+  @media print {
+    .rm { display: none !important; }
+  }
+</style>
