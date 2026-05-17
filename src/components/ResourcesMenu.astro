@@ -16,10 +16,53 @@ interface Props {
 const { current, locale = "en" } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-const masterclassHref =
-  locale === "pt" ? `${base}/masterclass/pt/claude-code/` :
-  locale === "es" ? `${base}/masterclass/es/claude-code/` :
-                    `${base}/masterclass/claude-code/`;
+// Per-surface locale routing. All four surfaces have EN at root path and
+// PT/ES at /<surface>/<locale>/<page>/.
+const localeSegment = locale === "en" ? "" : `/${locale}`;
+
+const cheatsheetHref  = `${base}/cheatsheet${localeSegment}/claude-core/`;
+const masterclassHref = `${base}/masterclass${localeSegment}/claude-code/`;
+const goalHref        = `${base}/masterclass${localeSegment}/goal-command/`;
+const cookbookHref    = `${base}/cookbook${localeSegment}/hooks/`;
+
+// Per-locale UI copy. Resources label + per-card title/desc.
+type LocaleCopy = {
+  resourcesLabel: string;
+  cheatsheet: { title: string; desc: string };
+  masterclass: { title: string; desc: string };
+  goal: { title: string; desc: string };
+  cookbook: { title: string; desc: string };
+  youAreHere: string;
+};
+
+const COPY: Record<"en" | "pt" | "es", LocaleCopy> = {
+  en: {
+    resourcesLabel: "Resources",
+    cheatsheet:  { title: "Cheatsheet",     desc: "Dense single-page reference — the hub" },
+    masterclass: { title: "Master Class",   desc: "12-module guided walkthrough · ~60 min" },
+    goal:        { title: "/goal Class",    desc: "Deep dive on /goal · worker vs evaluator" },
+    cookbook:    { title: "Hook Cookbook",  desc: "10 production-ready hook recipes" },
+    youAreHere:  " · you are here",
+  },
+  pt: {
+    resourcesLabel: "Recursos",
+    cheatsheet:  { title: "Cheatsheet",     desc: "Referência densa em uma página — o hub" },
+    masterclass: { title: "Master Class",   desc: "Tour guiado de 12 módulos · ~60 min" },
+    goal:        { title: "/goal Class",    desc: "Aprofundamento em /goal · worker vs evaluator" },
+    cookbook:    { title: "Hook Cookbook",  desc: "10 receitas de hooks prontas pra produção" },
+    youAreHere:  " · você está aqui",
+  },
+  es: {
+    resourcesLabel: "Recursos",
+    cheatsheet:  { title: "Cheatsheet",     desc: "Referencia densa de una página — el hub" },
+    masterclass: { title: "Master Class",   desc: "Recorrido guiado de 12 módulos · ~60 min" },
+    goal:        { title: "/goal Class",    desc: "Inmersión en /goal · worker vs evaluator" },
+    cookbook:    { title: "Hook Cookbook",  desc: "10 recetas de hooks listas para producción" },
+    youAreHere:  " · estás aquí",
+  },
+};
+
+const t = COPY[locale];
 
 const RESOURCES: {
   slug: CurrentPage;
@@ -28,40 +71,16 @@ const RESOURCES: {
   desc: string;
   href: string;
 }[] = [
-  {
-    slug: "cheatsheet",
-    num: "●",
-    title: "Cheatsheet",
-    desc: "Dense single-page reference — the hub",
-    href: `${base}/cheatsheet/claude-core/`,
-  },
-  {
-    slug: "masterclass",
-    num: "01",
-    title: "Master Class",
-    desc: "12-module guided walkthrough · ~60 min",
-    href: masterclassHref,
-  },
-  {
-    slug: "goal",
-    num: "02",
-    title: "/goal Class",
-    desc: "Deep dive on /goal · worker vs evaluator",
-    href: `${base}/masterclass/goal-command/`,
-  },
-  {
-    slug: "cookbook",
-    num: "03",
-    title: "Hook Cookbook",
-    desc: "10 production-ready hook recipes",
-    href: `${base}/cookbook/hooks/`,
-  },
+  { slug: "cheatsheet",  num: "●",  title: t.cheatsheet.title,  desc: t.cheatsheet.desc,  href: cheatsheetHref  },
+  { slug: "masterclass", num: "01", title: t.masterclass.title, desc: t.masterclass.desc, href: masterclassHref },
+  { slug: "goal",        num: "02", title: t.goal.title,        desc: t.goal.desc,        href: goalHref        },
+  { slug: "cookbook",    num: "03", title: t.cookbook.title,    desc: t.cookbook.desc,    href: cookbookHref    },
 ];
 ---
 
 <details class="rm">
   <summary class="rm-btn" aria-haspopup="menu">
-    <span>Resources</span>
+    <span>{t.resourcesLabel}</span>
     <span class="rm-caret" aria-hidden="true">▾</span>
   </summary>
   <div class="rm-panel" role="menu">
@@ -78,7 +97,7 @@ const RESOURCES: {
           <span class="rm-text">
             <span class="rm-title">
               {r.title}
-              {isCurrent && <span class="rm-here"> · you are here</span>}
+              {isCurrent && <span class="rm-here">{t.youAreHere}</span>}
             </span>
             <span class="rm-desc">{r.desc}</span>
           </span>

@@ -2,6 +2,7 @@
 import "../../styles/global.css";
 import { REPO_URL } from "../../i18n/locales";
 import ResourcesMenu from "../../components/ResourcesMenu.astro";
+import LanguageSwitcher from "../../components/LanguageSwitcher.astro";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const siteUrl = "https://cfpperche.github.io";
@@ -27,8 +28,14 @@ const pageDesc = `One-page poster reference for Claude Code v${CC_VERSION}: CLI 
   <body class="poster-body">
     <div class="top-row">
       <a href={`${base}/`} class="back-link">← claude-core</a>
-      <ResourcesMenu current="cheatsheet" />
+      <ResourcesMenu current="cheatsheet" locale="en" />
       <div class="cs-toolbar" role="toolbar" aria-label="Cheatsheet tools">
+        <LanguageSwitcher
+          enHref={`${base}/cheatsheet/claude-core/`}
+          ptHref={`${base}/cheatsheet/pt/claude-core/`}
+          esHref={`${base}/cheatsheet/es/claude-core/`}
+          current="en"
+        />
         <input
           id="cs-search"
           type="search"

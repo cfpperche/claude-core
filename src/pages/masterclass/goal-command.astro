@@ -2,6 +2,7 @@
 import "../../styles/global.css";
 import { REPO_URL } from "../../i18n/locales";
 import ResourcesMenu from "../../components/ResourcesMenu.astro";
+import LanguageSwitcher from "../../components/LanguageSwitcher.astro";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const siteUrl = "https://cfpperche.github.io";
@@ -44,8 +45,14 @@ const modules = [
 
     <div class="mc-top">
       <a href={`${base}/`} class="mc-back">← claude-core</a>
-      <ResourcesMenu current="goal" />
+      <ResourcesMenu current="goal" locale="en" />
       <div class="mc-top-tools">
+        <LanguageSwitcher
+          enHref={`${base}/masterclass/goal-command/`}
+          ptHref={`${base}/masterclass/pt/goal-command/`}
+          esHref={`${base}/masterclass/es/goal-command/`}
+          current="en"
+        />
         <button id="mc-print" type="button" class="mc-tool-btn" title="Print as PDF">
           <span aria-hidden="true">↓</span> PDF
         </button>

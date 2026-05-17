@@ -1,0 +1,61 @@
+---
+// LanguageSwitcher — EN/PT/ES pills for the top bar of every page.
+// Pass the three URLs for the current page in each locale, and mark which one is active.
+
+interface Props {
+  enHref: string;
+  ptHref: string;
+  esHref: string;
+  current: "en" | "pt" | "es";
+}
+
+const { enHref, ptHref, esHref, current } = Astro.props;
+
+const LANGS: { code: "en" | "pt" | "es"; label: string; href: string }[] = [
+  { code: "en", label: "EN", href: enHref },
+  { code: "pt", label: "PT", href: ptHref },
+  { code: "es", label: "ES", href: esHref },
+];
+---
+
+<div class="lang" role="group" aria-label="Language">
+  {LANGS.map((l) => (
+    <a
+      href={l.href}
+      class:list={["lang-pill", l.code === current && "lang-pill-active"]}
+      aria-current={l.code === current ? "page" : undefined}
+    >
+      {l.label}
+    </a>
+  ))}
+</div>
+
+<style>
+  .lang {
+    display: inline-flex;
+    gap: 4px;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+  }
+  .lang-pill {
+    padding: 4px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 2px;
+    color: var(--p-ink-dim, #9ca3af);
+    text-decoration: none;
+    transition: color 0.1s, border-color 0.1s, background 0.1s;
+  }
+  .lang-pill:hover {
+    color: var(--p-yellow, #ffe066);
+    border-color: var(--p-magenta, #ff44ff);
+  }
+  .lang-pill-active {
+    color: var(--p-green, #39ff14);
+    border-color: var(--p-green, #39ff14);
+    background: rgba(57, 255, 20, 0.06);
+  }
+  @media print {
+    .lang { display: none !important; }
+  }
+</style>

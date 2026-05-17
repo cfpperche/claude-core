@@ -1,17 +1,17 @@
 ---
-import "../styles/global.css";
-import { REPO_URL } from "../i18n/locales";
-import LanguageSwitcher from "../components/LanguageSwitcher.astro";
+import "../../styles/global.css";
+import { REPO_URL } from "../../i18n/locales";
+import LanguageSwitcher from "../../components/LanguageSwitcher.astro";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const siteUrl = "https://cfpperche.github.io";
 const CC_VERSION = "2.1.143";
-const pageTitle = `claude-core · A learning surface for Claude Code`;
-const pageDesc = `Four free learning surfaces for Claude Code v${CC_VERSION}: a dense cheatsheet, a 12-module Master Class, an 8-module deep dive on the /goal command, and a Hook Cookbook with 10 production-ready recipes.`;
+const pageTitle = `claude-core · Aprende Claude Code`;
+const pageDesc = `Cuatro recursos gratuitos para aprender Claude Code v${CC_VERSION}: un cheatsheet denso, una Master Class de 12 módulos, una inmersión profunda de 8 módulos en el comando /goal, y un Hook Cookbook con 10 recetas listas para producción.`;
 ---
 
 <!doctype html>
-<html lang="en" data-theme="poster">
+<html lang="es" data-theme="poster">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -20,7 +20,8 @@ const pageDesc = `Four free learning surfaces for Claude Code v${CC_VERSION}: a 
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={pageDesc} />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content={`${siteUrl}${base}/`} />
+    <meta property="og:url" content={`${siteUrl}${base}/es/`} />
+    <meta property="og:locale" content="es" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
   </head>
@@ -31,7 +32,7 @@ const pageDesc = `Four free learning surfaces for Claude Code v${CC_VERSION}: a 
         enHref={`${base}/`}
         ptHref={`${base}/pt/`}
         esHref={`${base}/es/`}
-        current="en"
+        current="es"
       />
     </div>
 
@@ -41,90 +42,90 @@ const pageDesc = `Four free learning surfaces for Claude Code v${CC_VERSION}: a 
         <div class="ix-strip">
           <span class="ix-tag">▮ CLAUDE-CORE</span>
           <span class="ix-tag">CLAUDE CODE v{CC_VERSION}</span>
-          <span class="ix-tag">FOUR FREE SURFACES ▮</span>
+          <span class="ix-tag">CUATRO RECURSOS GRATUITOS ▮</span>
         </div>
         <h1 class="ix-title">
-          <span class="ix-title-line">A LEARNING SURFACE</span>
-          <span class="ix-title-line ix-title-accent">FOR CLAUDE CODE</span>
+          <span class="ix-title-line">UNA BASE</span>
+          <span class="ix-title-line ix-title-accent">PARA APRENDER CLAUDE CODE</span>
         </h1>
         <p class="ix-sub">
-          Four free resources for getting deep on Anthropic's terminal-native coding agent. Pick by where you are — reference, guided walkthrough, deep dive, or copy-paste recipes.
+          Cuatro recursos gratuitos para profundizar en el agente de código nativo de terminal de Anthropic. Elige según tu momento — referencia, recorrido guiado, inmersión profunda o recetas copia-y-pega.
         </p>
       </header>
 
       <section class="ix-grid">
 
-        <a href={`${base}/cheatsheet/claude-core/`} class="ix-card ix-card-green">
+        <a href={`${base}/cheatsheet/es/claude-core/`} class="ix-card ix-card-green">
           <div class="ix-card-head">
             <span class="ix-card-n">●</span>
             <h2 class="ix-card-h">Cheatsheet</h2>
             <span class="ix-card-arr" aria-hidden="true">↗</span>
           </div>
           <p class="ix-card-desc">
-            Dense single-page poster. Every CLI flag, hook event, skill/agent surface, settings field, slash command. Ctrl-F friendly. Print as A3.
+            Póster denso de una sola página. Cada flag de CLI, hook event, superficie de skill/agent, campo de settings, slash command. Compatible con Ctrl-F. Se imprime en A3.
           </p>
           <div class="ix-card-meta">
-            <span>1 page</span><span>·</span><span>~50 KB</span><span>·</span><span>printable</span>
+            <span>1 página</span><span>·</span><span>~50 KB</span><span>·</span><span>imprimible</span>
           </div>
         </a>
 
-        <a href={`${base}/masterclass/claude-code/`} class="ix-card ix-card-magenta">
+        <a href={`${base}/masterclass/es/claude-code/`} class="ix-card ix-card-magenta">
           <div class="ix-card-head">
             <span class="ix-card-n">01</span>
             <h2 class="ix-card-h">Master Class</h2>
             <span class="ix-card-arr" aria-hidden="true">↗</span>
           </div>
           <p class="ix-card-desc">
-            Guided 12-module walkthrough from first <code>claude</code> session to headless CI/CD. TL;DR-first per module. About 60 minutes end-to-end. <b>Start here if you're new.</b>
+            Recorrido guiado de 12 módulos desde la primera sesión <code>claude</code> hasta CI/CD headless. TL;DR al inicio de cada módulo. Cerca de 60 minutos de principio a fin. <b>Empieza aquí si eres nuevo.</b>
           </p>
           <div class="ix-card-meta">
-            <span>12 modules</span><span>·</span><span>EN · PT · ES</span><span>·</span><span>printable</span>
+            <span>12 módulos</span><span>·</span><span>EN · PT · ES</span><span>·</span><span>imprimible</span>
           </div>
         </a>
 
-        <a href={`${base}/masterclass/goal-command/`} class="ix-card ix-card-cyan">
+        <a href={`${base}/masterclass/es/goal-command/`} class="ix-card ix-card-cyan">
           <div class="ix-card-head">
             <span class="ix-card-n">02</span>
             <h2 class="ix-card-h">/goal Class</h2>
             <span class="ix-card-arr" aria-hidden="true">↗</span>
           </div>
           <p class="ix-card-desc">
-            Deep dive on the <code>/goal</code> command — worker vs evaluator architecture, anatomy of a good condition, anti-patterns. <b>Read before running unattended agents.</b>
+            Inmersión profunda en el comando <code>/goal</code> — arquitectura worker vs evaluator, anatomía de una buena condición, anti-patrones. <b>Léelo antes de ejecutar agentes sin supervisión.</b>
           </p>
           <div class="ix-card-meta">
-            <span>8 modules</span><span>·</span><span>~25 min</span><span>·</span><span>printable</span>
+            <span>8 módulos</span><span>·</span><span>~25 min</span><span>·</span><span>imprimible</span>
           </div>
         </a>
 
-        <a href={`${base}/cookbook/hooks/`} class="ix-card ix-card-yellow">
+        <a href={`${base}/cookbook/es/hooks/`} class="ix-card ix-card-yellow">
           <div class="ix-card-head">
             <span class="ix-card-n">03</span>
             <h2 class="ix-card-h">Hook Cookbook</h2>
             <span class="ix-card-arr" aria-hidden="true">↗</span>
           </div>
           <p class="ix-card-desc">
-            10 production-ready hook recipes covering all 7 lifecycle event families. Each one: <i>When · Payload · Script · Wire-up · Gotcha</i>. <b>Copy, paste, customize.</b>
+            10 recetas de hooks listas para producción que cubren las 7 familias de eventos de ciclo de vida. Cada una: <i>Cuándo · Payload · Script · Configuración · Trampa</i>. <b>Copia, pega, personaliza.</b>
           </p>
           <div class="ix-card-meta">
-            <span>10 recipes</span><span>·</span><span>7 families</span><span>·</span><span>printable</span>
+            <span>10 recetas</span><span>·</span><span>7 familias</span><span>·</span><span>imprimible</span>
           </div>
         </a>
 
       </section>
 
       <section class="ix-about">
-        <h2 class="ix-about-h">What this is</h2>
+        <h2 class="ix-about-h">Qué es esto</h2>
         <p>
-          Four standalone resources, designed to compose. The cheatsheet is the dense reference — always one Ctrl+F away. The Master Class is the linear path for newcomers. The /goal Class and Hook Cookbook are depth drops on specific surfaces. Every page has a <code>Resources ▾</code> dropdown so you can jump between them at any time.
+          Cuatro recursos independientes, diseñados para componer. El cheatsheet es la referencia densa — siempre a un Ctrl+F de distancia. La Master Class es el camino lineal para los novatos. La /goal Class y el Hook Cookbook son inmersiones en superficies específicas. Cada página tiene un menú desplegable <code>Recursos ▾</code> para saltar entre ellas en cualquier momento.
         </p>
         <p>
-          Everything is static HTML. No tracking, no analytics, no JS framework. Built with Astro, hosted on GitHub Pages. Source on <a href={REPO_URL} target="_blank" rel="noopener">github/cfpperche/claude-core</a>. MIT license — fork it, adapt it, ship your own.
+          Todo es HTML estático. Sin tracking, sin analytics, sin framework JS. Construido con Astro, alojado en GitHub Pages. Código en <a href={REPO_URL} target="_blank" rel="noopener">github/cfpperche/claude-core</a>. Licencia MIT — clónalo, adáptalo, lanza tu propia versión.
         </p>
       </section>
 
       <footer class="ix-foot">
         <p class="ix-foot-meta">
-          Built against Claude Code <code>v{CC_VERSION}</code>. CLI flags and hook event names track that version. Last revision: 2026-05-17.
+          Construido contra Claude Code <code>v{CC_VERSION}</code>. Las flags de CLI y los nombres de hook event siguen esa versión. Última revisión: 2026-05-17.
         </p>
       </footer>
 

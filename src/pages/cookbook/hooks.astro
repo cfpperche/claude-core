@@ -2,6 +2,7 @@
 import "../../styles/global.css";
 import { REPO_URL } from "../../i18n/locales";
 import ResourcesMenu from "../../components/ResourcesMenu.astro";
+import LanguageSwitcher from "../../components/LanguageSwitcher.astro";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const siteUrl = "https://cfpperche.github.io";
@@ -67,8 +68,14 @@ const recipes: {
 
     <div class="ck-top">
       <a href={`${base}/`} class="ck-back">← claude-core</a>
-      <ResourcesMenu current="cookbook" />
+      <ResourcesMenu current="cookbook" locale="en" />
       <div class="ck-top-tools">
+        <LanguageSwitcher
+          enHref={`${base}/cookbook/hooks/`}
+          ptHref={`${base}/cookbook/pt/hooks/`}
+          esHref={`${base}/cookbook/es/hooks/`}
+          current="en"
+        />
         <button id="ck-print" type="button" class="ck-tool-btn" title="Print as PDF (uses browser PDF)">
           <span aria-hidden="true">↓</span> PDF
         </button>
