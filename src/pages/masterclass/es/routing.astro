@@ -1,0 +1,840 @@
+---
+import "../../../styles/global.css";
+import { REPO_URL } from "../../../i18n/locales";
+import ResourcesMenu from "../../../components/ResourcesMenu.astro";
+import LanguageSwitcher from "../../../components/LanguageSwitcher.astro";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const siteUrl = "https://cfpperche.github.io";
+const CC_VERSION = "2.1.143";
+const CCR_VERSION = "1.0.x";
+const pageTitle = `Claude Code · Routing Class · CCRouter`;
+const pageDesc = `Extiende Claude Code con CCRouter — el proxy local que enruta las peticiones a cualquier modelo por tipo de tarea. 4 módulos + 8 recetas de enrutamiento copia-pega.`;
+
+const cheatsheetPath = `${base}/cheatsheet/es/claude-core/`;
+const masterclassPath = `${base}/masterclass/es/claude-code/`;
+const goalPath = `${base}/masterclass/es/goal-command/`;
+const cookbookPath = `${base}/cookbook/es/hooks/`;
+
+const modules = [
+  { n: 1, slug: "why",      title: "¿Por qué enrutar?",            tag: "fundamentos" },
+  { n: 2, slug: "arch",     title: "La arquitectura",              tag: "internos"    },
+  { n: 3, slug: "install",  title: "Instalación + primera config", tag: "práctica"    },
+  { n: 4, slug: "routes",   title: "Las seis rutas",               tag: "práctica"    },
+];
+
+const recipes = [
+  { n: 1, slug: "r-background", title: "Manda tareas background a un modelo barato",        need: "Costo"          },
+  { n: 2, slug: "r-longctx",    title: "Enruta long-context a Gemini 2.5 Pro",              need: "Capacidad"      },
+  { n: 3, slug: "r-ollama",     title: "Local-first vía Ollama (offline / privado)",        need: "Privacidad"     },
+  { n: 4, slug: "r-subagent",   title: "Sub-agents a Haiku, parent a Opus",                 need: "Costo"          },
+  { n: 5, slug: "r-failover",   title: "Cadena de failover: Anthropic → OpenRouter",        need: "Confiabilidad"  },
+  { n: 6, slug: "r-budget",     title: "Tope diario con API_TIMEOUT_MS",                    need: "Costo"          },
+  { n: 7, slug: "r-perproject", title: "Override de enrutamiento por proyecto",             need: "Alcance"        },
+  { n: 8, slug: "r-transformer",title: "Transformer custom — descarta reasoning tokens",    need: "Compat"         },
+];
+---
+
+<!doctype html>
+<html lang="es" data-theme="poster">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDesc} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDesc} />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content={`${siteUrl}${base}/masterclass/es/routing/`} />
+    <meta property="og:locale" content="es_ES" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+  </head>
+  <body class="mc-body">
+
+    <div class="mc-top">
+      <a href={`${base}/`} class="mc-back">← claude-core</a>
+      <ResourcesMenu current="routing" locale="es" />
+      <div class="mc-top-tools">
+        <LanguageSwitcher
+          enHref={`${base}/masterclass/routing/`}
+          ptHref={`${base}/masterclass/pt/routing/`}
+          esHref={`${base}/masterclass/es/routing/`}
+          current="es"
+        />
+        <button id="mc-print" type="button" class="mc-tool-btn" title="Imprimir como PDF">
+          <span aria-hidden="true">↓</span> PDF
+        </button>
+      </div>
+    </div>
+
+    <main class="mc-page">
+
+      <header class="mc-banner">
+        <div class="mc-strip">
+          <span class="mc-tag">▮ CLAUDE-CORE · ACADEMY</span>
+          <span class="mc-tag">CLAUDE CODE v{CC_VERSION}</span>
+          <span class="mc-tag">CCROUTER · MODEL LAYER ▮</span>
+        </div>
+        <h1 class="mc-title">
+          <span class="mc-title-line">ENRUTA LA</span>
+          <span class="mc-title-line mc-title-accent">CAPA DE MODELO</span>
+        </h1>
+        <p class="mc-sub">
+          Usa la UX de Claude Code con cualquier modelo — sin perder el loop. Cuatro módulos de teoría, ocho configs de enrutamiento copia-pega. ~25 minutos.
+        </p>
+      </header>
+
+      <section class="mc-intro">
+        <h2 class="mc-intro-h">Por qué existe esta class</h2>
+        <p>
+          Claude Code habla con un solo modelo por defecto — el de Anthropic. Pero el turn más caro de tu sesión (un file walk, un resumen de output de grep, una limpieza de comentarios) no necesita razonamiento nivel Opus. <b>CCRouter</b> se sienta entre el cliente de CC y cualquier provider, enruta cada request al modelo que encaja con el trabajo, y se mantiene invisible al agent loop. La asimetría de costo por sí sola paga el setup. La diversidad de modelos desbloquea workflows que el camino single-vendor no alcanza.
+        </p>
+        <h2 class="mc-intro-h">Lo que vas a aprender</h2>
+        <ul class="mc-intro-ul">
+          <li>Lo que CCRouter realmente intercepta y por qué es seguro.</li>
+          <li>Las seis rutas (<code>default</code>, <code>background</code>, <code>think</code>, <code>longContext</code>, <code>webSearch</code>, <code>image</code>) y cuándo dispara cada una.</li>
+          <li>El <code>config.json</code> mínimo que te saca de la factura de Anthropic para trabajo rutinario.</li>
+          <li>Ocho patrones de enrutamiento listos para producción: tope de costo, failover, override por proyecto, transformer custom.</li>
+        </ul>
+        <h2 class="mc-intro-h">Validado contra</h2>
+        <p>
+          Claude Code <code>v{CC_VERSION}</code> · <code>@musistudio/claude-code-router</code> <code>v{CCR_VERSION}</code>. CCRouter es un proyecto open-source de terceros (26.4k stars a mayo de 2026) y se mueve rápido — los shapes de config aquí están validados contra los docs canónicos pero verifica los nombres de campo contra tu versión instalada antes de copiar y pegar.
+        </p>
+      </section>
+
+      <nav class="mc-toc" aria-label="Tabla de contenidos de routing class">
+        <div class="mc-toc-h">▸ TABLA DE CONTENIDOS</div>
+        <ol class="mc-toc-list">
+          {modules.map((m) => (
+            <li>
+              <a href={`#m${m.n}`} data-tag={m.tag}>
+                <span class="mc-toc-n">§{m.n}</span>
+                <span class="mc-toc-t">{m.title}</span>
+                <span class="mc-toc-tag">{m.tag}</span>
+              </a>
+            </li>
+          ))}
+          <li class="mc-toc-sep">
+            <a href="#recipes" data-tag="recipes">
+              <span class="mc-toc-n">◎</span>
+              <span class="mc-toc-t">Cookbook — 8 recetas de enrutamiento</span>
+              <span class="mc-toc-tag">recipes</span>
+            </a>
+          </li>
+        </ol>
+      </nav>
+
+      <!-- §1 · POR QUÉ ENRUTAR -->
+      <section id="m1" class="mc-mod mc-mod-foundations">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§1</span>
+          <h2 class="mc-mod-h">¿Por qué enrutar?</h2>
+          <span class="mc-mod-tag">fundamentos</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — tres presiones te sacan del default single-vendor: <b>asimetría de costo</b> (Opus pricing en trabajo rutinario), <b>diversidad de modelo</b> (contexto largo de Gemini, razonamiento-por-dólar de DeepSeek, Ollama local para privacidad) y <b>vendor lock-off</b> (mantén la UX de CC, elige el modelo). CCRouter es la forma más barata de atacar las tres a la vez.</p>
+
+          <p class="mc-mini-h">▸ Asimetría de costo — la cuenta que nadie hace</p>
+          <p>Una sesión típica de Claude Code mezcla unos pocos turns pesados de razonamiento con muchos turns baratos — lecturas de archivo, walks de directorio, resúmenes de output de tools. Tratar cada turn como clase Opus es pagar precio Opus por trabajo clase Haiku. La medición de comunidad para heavy users de CC cae rutinariamente en el rango de <b>50–99% de ahorro</b> cuando el tráfico rutinario se desvía — el número exacto depende de tu ratio read/write.</p>
+
+          <p class="mc-mini-h">▸ Diversidad de modelo — capacidades que Anthropic no entrega</p>
+          <ul>
+            <li><b>Gemini 2.5 Pro</b> — contexto de 2M tokens. Útil cuando necesitas razonar sobre un monorepo entero, un log largo, o un transcript gigante.</li>
+            <li><b>DeepSeek V3 / R1</b> — alta calidad de razonamiento por una fracción del precio Opus. Buen fit para rutas "think".</li>
+            <li><b>Ollama (local)</b> — corre offline, nunca manda bytes fuera de tu máquina. La jugada de privacidad / industria regulada.</li>
+            <li><b>Groq / SiliconFlow / Together</b> — latencia muy baja para el camino "default" cuando la responsividad importa más que la calidad de tope.</li>
+          </ul>
+
+          <p class="mc-mini-h">▸ Vendor lock-off — misma UX, cualquier modelo</p>
+          <p>El valor de CC es el loop, el permission model, el sistema de hooks, los slash commands — no el modelo. CCRouter te deja mantener todo eso mientras eliges la capa de inferencia por tarea. La posición oficial es <i>"Usa Claude Code como base para infraestructura de coding, permitiéndote decidir cómo interactúas con el modelo mientras disfrutas los updates de Anthropic"</i> — misma UX, tus decisiones de modelo.</p>
+
+          <p class="mc-mini-h">▸ Cuándo NO instalar CCRouter</p>
+          <p>Si tu sesión es chica, tu gasto es &lt;$20/mes, o nunca lo pensaste — no te molestes. CCRouter es superficie operacional; el momento correcto para adoptarlo es cuando tu factura de CC es lo suficientemente grande para que <b>costo de setup &lt; ahorro de un mes</b>. Para la mayoría de hobby users, la respuesta es "no". Para quien corre sesiones <code>/goal</code> headless en CI todas las noches, la respuesta es "probablemente sí".</p>
+
+          <a class="mc-deep" href={`${goalPath}#m7`}>Deep dive → /goal headless (el caso de uso canónico de gasto pesado)</a>
+        </div>
+        <a class="mc-next" href="#m2">Siguiente → §2 · La arquitectura</a>
+      </section>
+
+      <!-- §2 · ARQUITECTURA -->
+      <section id="m2" class="mc-mod mc-mod-internals">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§2</span>
+          <h2 class="mc-mod-h">La arquitectura</h2>
+          <span class="mc-mod-tag">internos</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — CCRouter es un proxy local en <code>127.0.0.1:3456</code>. Habla el shape de la API de Anthropic del lado client y el shape de la API de cualquier provider del lado server. CC cree que está hablando con Anthropic; el provider cree que está hablando con su client nativo. Los transformers hacen la traducción.</p>
+
+          <p class="mc-mini-h">▸ El camino del request</p>
+          <div class="mc-diagram"><span class="d-acc">Claude Code</span>  (con ANTHROPIC_BASE_URL=http://127.0.0.1:3456)
+       │
+       ▼
+<span class="d-mag">CCRouter</span>  (proxy local, tu máquina)
+       │
+       │   1. parse del request en shape Anthropic
+       │   2. clasifica ruta: default | background | think | longContext | webSearch | image
+       │   3. consulta Router[route] → provider + modelo
+       │   4. aplica transformers (lado request)
+       │
+       ▼
+<span class="d-key">Provider</span>  (OpenRouter · DeepSeek · Ollama · Gemini · Groq · …)
+       │
+       ▼  response
+<span class="d-mag">CCRouter</span>  (transformers — lado response)
+       │
+       ▼
+<span class="d-acc">Claude Code</span>  (ve response en shape Anthropic, nunca supo)</div>
+
+          <p class="mc-mini-h">▸ Lo que CCRouter ve</p>
+          <ul>
+            <li>Cada <code>POST /v1/messages</code> que CC hace — el prompt completo, system message, definiciones de tool.</li>
+            <li>Conteos de tokens (para la decisión del <code>longContextThreshold</code>).</li>
+            <li>Tool calls y sus argumentos — para los transformers que necesitan reescribir shapes de tool por provider.</li>
+          </ul>
+
+          <p class="mc-mini-h">▸ Lo que CCRouter NO ve</p>
+          <ul>
+            <li>Tu filesystem. CC lee archivos; CCRouter solo ve lo que CC ya serializó en el request.</li>
+            <li>Hooks. Corren dentro del proceso de CC, antes/después de la frontera de request que CCRouter intercepta.</li>
+            <li>Tu API key de Anthropic — cuando enruta a un provider no-Anthropic, la key de Anthropic nunca se manda.</li>
+          </ul>
+
+          <p class="mc-mini-h">▸ Transformers — el pegamento entre los shapes de API</p>
+          <p>Cada provider tiene sus quirks: DeepSeek retorna un campo <code>reasoning_content</code>, Gemini quiere <code>safetySettings</code>, OpenRouter espera un header <code>HTTP-Referer</code>. Los transformers built-in (<code>deepseek</code>, <code>gemini</code>, <code>openrouter</code>, <code>groq</code>, <code>maxtoken</code>, <code>tooluse</code>, <code>reasoning</code>, <code>sampling</code>, <code>enhancetool</code>, <code>cleancache</code>, <code>vertex-gemini</code>) manejan los casos conocidos. Los transformers custom manejan el resto — ver receta R8.</p>
+
+          <p class="mc-mini-h">▸ Por qué esto es seguro</p>
+          <p>El proxy hace bind en <code>127.0.0.1</code>, no <code>0.0.0.0</code> — ningún tráfico externo llega. El campo top-level opcional <code>APIKEY</code> exige que clients (incluyendo CC) manden un header <code>Authorization</code> que coincida, defendiendo contra otros procesos locales que peguen al endpoint. La env var <code>NO_PROXY=127.0.0.1</code> que <code>ccr activate</code> setea evita que tu proxy HTTP corporativo husmee tráfico de localhost.</p>
+
+          <a class="mc-deep" href="https://musistudio.github.io/claude-code-router/" target="_blank" rel="noopener">Deep dive → docs oficiales de CCRouter</a>
+        </div>
+        <a class="mc-next" href="#m3">Siguiente → §3 · Instalación + primera config</a>
+      </section>
+
+      <!-- §3 · INSTALACIÓN -->
+      <section id="m3" class="mc-mod mc-mod-craft">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§3</span>
+          <h2 class="mc-mod-h">Instalación + primera config</h2>
+          <span class="mc-mod-tag">práctica</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — <code>npm install -g @musistudio/claude-code-router</code>, escribe un <code>~/.claude-code-router/config.json</code> mínimo, levanta con <code>ccr code</code> en vez de <code>claude</code>. Cinco minutos de cero al primer turn enrutado.</p>
+
+          <p class="mc-mini-h">▸ Instalar</p>
+          <pre><code>{`# install global
+npm install -g @musistudio/claude-code-router
+
+# verifica
+ccr --version`}</code></pre>
+
+          <p class="mc-mini-h">▸ Ubicación de la config</p>
+          <p>La config vive en <code>~/.claude-code-router/config.json</code> (atención: <i>no</i> en <code>~/.config/</code> — typo común). Crea el directorio si no existe.</p>
+
+          <p class="mc-mini-h">▸ Una config mínima — DeepSeek para todo</p>
+          <pre><code>{`{
+  "LOG": false,
+  "API_TIMEOUT_MS": 600000,
+  "Providers": [
+    {
+      "name": "deepseek",
+      "api_base_url": "https://api.deepseek.com/v1/chat/completions",
+      "api_key": "sk-...your-deepseek-key...",
+      "models": ["deepseek-chat", "deepseek-reasoner"],
+      "transformer": { "use": ["deepseek"] }
+    }
+  ],
+  "Router": {
+    "default":     "deepseek,deepseek-chat",
+    "background":  "deepseek,deepseek-chat",
+    "think":       "deepseek,deepseek-reasoner",
+    "longContext": "deepseek,deepseek-chat",
+    "webSearch":   "deepseek,deepseek-chat"
+  }
+}`}</code></pre>
+
+          <p class="mc-mini-h">▸ Levantar — tres caminos</p>
+          <ul>
+            <li><code>ccr code</code> — arranca el router Y lanza Claude Code de una. El camino más simple.</li>
+            <li><code>ccr start</code> y después <code>claude</code> — corre el proxy como proceso separado, usa el binario <code>claude</code> normal. Útil cuando varias instancias de CC comparten un router.</li>
+            <li><code>eval "$(ccr activate)"</code> — exporta <code>ANTHROPIC_BASE_URL</code>, <code>ANTHROPIC_AUTH_TOKEN</code>, <code>NO_PROXY</code> en tu shell. Después de esto, cualquier invocación de <code>claude</code> en ese shell usa el router hasta que salgas.</li>
+          </ul>
+
+          <p class="mc-mini-h">▸ Verificá que funciona</p>
+          <pre><code>{`# en otra terminal, con CCR corriendo
+curl -s http://127.0.0.1:3456/health
+# → {"ok":true}
+
+# en tu sesión de CC
+/cost
+# → mirá el campo "model"; si dice "deepseek-chat" en vez de
+#   un nombre de modelo Anthropic, estás enrutado.`}</code></pre>
+
+          <p class="mc-mini-h">▸ Otros comandos CLI útiles</p>
+          <ul>
+            <li><code>ccr ui</code> — editor web de config en <code>http://127.0.0.1:3456/ui</code>. Más fácil que editar JSON a mano.</li>
+            <li><code>ccr model</code> — picker interactivo de modelo para la sesión actual (overridea el <code>Router.default</code>).</li>
+            <li><code>ccr stop</code> — mata el proxy.</li>
+          </ul>
+
+          <a class="mc-deep" href="https://github.com/musistudio/claude-code-router#readme" target="_blank" rel="noopener">Deep dive → README oficial (install + primera config)</a>
+        </div>
+        <a class="mc-next" href="#m4">Siguiente → §4 · Las seis rutas</a>
+      </section>
+
+      <!-- §4 · LAS RUTAS -->
+      <section id="m4" class="mc-mod mc-mod-craft">
+        <div class="mc-mod-head">
+          <span class="mc-mod-n">§4</span>
+          <h2 class="mc-mod-h">Las seis rutas</h2>
+          <span class="mc-mod-tag">práctica</span>
+        </div>
+        <div class="mc-mod-body">
+          <p class="mc-tldr"><b>TL;DR</b> — CCRouter clasifica cada request entrante en una de seis rutas y mapea la ruta a un par provider+modelo. <code>default</code> es el fallback; las otras cinco disparan en features observables del request.</p>
+
+          <p class="mc-mini-h">▸ Las seis rutas — cuándo dispara cada una</p>
+          <div class="mc-diagram"><span class="d-acc">default</span>      todo request que no coincide con una ruta más específica
+<span class="d-acc">background</span>   dispatches de sub-agent; reads/writes en masa; trabajo no-interactivo
+<span class="d-acc">think</span>        requests donde el system prompt o tools implican profundidad de razonamiento
+<span class="d-acc">longContext</span>  conteo de tokens prompt+historia &gt; longContextThreshold (default <span class="d-key">60000</span>)
+<span class="d-acc">webSearch</span>    request usa la tool WebSearch
+<span class="d-acc">image</span>        request contiene imagen (beta)
+
+<span class="d-dim">Las rutas se evalúan en orden de especificidad. longContext le gana a default;
+webSearch le gana a default. Lo específico le gana a lo genérico — exactamente
+una ruta dispara por request.</span></div>
+
+          <p class="mc-mini-h">▸ Un bloque Router multi-provider</p>
+          <pre><code>{`"Router": {
+  "default":     "anthropic,claude-sonnet-4-6",
+  "background":  "deepseek,deepseek-chat",
+  "think":       "deepseek,deepseek-reasoner",
+  "longContext": "gemini,gemini-2.5-pro",
+  "longContextThreshold": 60000,
+  "webSearch":   "openrouter,perplexity/sonar-pro",
+  "image":       "anthropic,claude-sonnet-4-6"
+}`}</code></pre>
+          <p>Lee como cascada: cualquier cosa pesada/razonamiento se queda en modelos premium; rutina y trabajo en masa va al camino barato; long-context va al modelo con la ventana más grande.</p>
+
+          <p class="mc-mini-h">▸ El campo <code>longContextThreshold</code></p>
+          <p>Un campo numérico en el objeto <code>Router</code> — el conteo de tokens sobre el cual la ruta <code>longContext</code> dispara. Default <code>60000</code>. Bajalo (<code>40000</code>) si querés sesgar hacia el modelo long-context antes, subilo si las llamadas a Gemini se están comiendo tu budget en requests de tamaño de frontera.</p>
+
+          <p class="mc-mini-h">▸ Config de provider — anatomía</p>
+          <pre><code>{`{
+  "name": "gemini",                                       // unique slug
+  "api_base_url": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+  "api_key": "AIza...your-key...",
+  "models": ["gemini-2.5-pro", "gemini-2.5-flash"],       // models you'll route to
+  "transformer": { "use": ["gemini"] }                    // request/response adapter
+}`}</code></pre>
+          <p>El campo <code>name</code> es lo que referenciás en el bloque <code>Router</code> (ej: <code>"longContext": "gemini,gemini-2.5-pro"</code> — la coma separa el nombre del provider del nombre del modelo).</p>
+
+          <p class="mc-mini-h">▸ Once transformers built-in</p>
+          <p><code>deepseek</code>, <code>gemini</code>, <code>openrouter</code>, <code>groq</code>, <code>maxtoken</code> (limita tokens de output), <code>tooluse</code> (reescribe tool calls), <code>reasoning</code> (maneja reasoning_content), <code>sampling</code> (altera temperature/top_p), <code>enhancetool</code>, <code>cleancache</code>, <code>vertex-gemini</code>. Aplicá a nivel provider vía <code>transformer.use</code>, o escopá a modelos específicos vía <code>transformer.&lt;model-name&gt;.use</code>.</p>
+
+          <a class="mc-deep" href="#recipes">Continuá → 8 recetas del cookbook de enrutamiento</a>
+        </div>
+      </section>
+
+      <!-- ===== COOKBOOK BLOCK ===== -->
+
+      <header id="recipes" class="mc-cb-banner">
+        <div class="mc-strip">
+          <span class="mc-tag">▮ COOKBOOK</span>
+          <span class="mc-tag">8 RECETAS · COPIA-PEGA</span>
+        </div>
+        <h2 class="mc-cb-title">RECETAS DE ENRUTAMIENTO</h2>
+        <p class="mc-cb-sub">
+          Cada receta: <b>Cuándo</b> · <b>Config</b> · <b>Configuración</b> · <b>Trampa</b>. Todas las configs son fragmentos — encajalas en el slot correcto de tu <code>config.json</code>.
+        </p>
+      </header>
+
+      <nav class="mc-rec-toc">
+        <ol class="mc-rec-list">
+          {recipes.map((r) => (
+            <li>
+              <a href={`#${r.slug}`}>
+                <span class="mc-rec-toc-n">R{r.n}</span>
+                <span class="mc-rec-toc-t">{r.title}</span>
+                <span class="mc-rec-toc-tag">{r.need}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+
+      <!-- R1 · BACKGROUND A MODELO BARATO -->
+      <article id="r-background" class="mc-recipe mc-rec-cost">
+        <header class="mc-rec-head">
+          <span class="mc-rec-n">R1</span>
+          <h3 class="mc-rec-h">Manda tareas background a un modelo barato</h3>
+          <span class="mc-rec-need">costo</span>
+        </header>
+        <p class="mc-when"><b>Cuándo</b> — dispatches de sub-agent, passes de indexing, reads de archivo en masa — trabajo necesario pero que no necesita razonamiento nivel Opus. Mantené el agent parent en premium, mandá todo lo marcado como <code>background</code> a DeepSeek (u otro modelo barato-y-bueno).</p>
+
+        <p class="mc-mini-h">▸ Fragmento de config</p>
+        <pre><code>{`"Providers": [
+  { "name": "anthropic", "api_base_url": "https://api.anthropic.com/v1/messages",
+    "api_key": "sk-ant-...", "models": ["claude-opus-4-7", "claude-sonnet-4-6"] },
+  { "name": "deepseek", "api_base_url": "https://api.deepseek.com/v1/chat/completions",
+    "api_key": "sk-...", "models": ["deepseek-chat"],
+    "transformer": { "use": ["deepseek"] } }
+],
+"Router": {
+  "default":    "anthropic,claude-sonnet-4-6",
+  "background": "deepseek,deepseek-chat"
+}`}</code></pre>
+
+        <p class="mc-mini-h">▸ Configuración</p>
+        <p>Pegalo en <code>~/.claude-code-router/config.json</code>. Levantá con <code>ccr code</code>. Los dispatches normales de sub-agent de CC ahora corren en DeepSeek — sin cambios en tus llamadas a la tool <code>Agent</code>.</p>
+
+        <p class="mc-gotcha"><b>Trampa</b> — el comportamiento de tool-use de DeepSeek difiere del de Anthropic; el transformer <code>deepseek</code> maneja los casos comunes pero si un sub-agent espera output JSON muy estricto podés necesitar el transformer <code>tooluse</code> también: <code>"transformer": &#123; "use": ["deepseek", "tooluse"] &#125;</code>.</p>
+      </article>
+
+      <!-- R2 · LONG CONTEXT A GEMINI -->
+      <article id="r-longctx" class="mc-recipe mc-rec-cap">
+        <header class="mc-rec-head">
+          <span class="mc-rec-n">R2</span>
+          <h3 class="mc-rec-h">Enruta long-context a Gemini 2.5 Pro</h3>
+          <span class="mc-rec-need">capacidad</span>
+        </header>
+        <p class="mc-when"><b>Cuándo</b> — estás razonando sobre un monorepo entero, un log de miles de líneas, o un transcript gigante. La ventana de Anthropic es ancha pero Gemini 2.5 Pro con 2M tokens es más ancha. Enrutá solo los requests que lo necesitan.</p>
+
+        <p class="mc-mini-h">▸ Fragmento de config</p>
+        <pre><code>{`"Providers": [
+  { "name": "anthropic", "api_base_url": "https://api.anthropic.com/v1/messages",
+    "api_key": "sk-ant-...", "models": ["claude-sonnet-4-6"] },
+  { "name": "gemini",
+    "api_base_url": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+    "api_key": "AIza...", "models": ["gemini-2.5-pro"],
+    "transformer": { "use": ["gemini"] } }
+],
+"Router": {
+  "default":     "anthropic,claude-sonnet-4-6",
+  "longContext": "gemini,gemini-2.5-pro",
+  "longContextThreshold": 60000
+}`}</code></pre>
+
+        <p class="mc-mini-h">▸ Configuración</p>
+        <p>El threshold es un conteo de tokens <i>entrantes</i> (prompt + historia). Una vez que lo cruzás, cada turn por el resto de la sesión probablemente queda arriba — así que Gemini queda en juego. Bajá el threshold a <code>40000</code> si querés handoff más temprano; subilo a <code>120000</code> si solo querés tareas repo-wide reales saliendo enrutadas.</p>
+
+        <p class="mc-gotcha"><b>Trampa</b> — los safety filters de Gemini pueden rechazar contenido que Anthropic acepta (ej: investigación de seguridad, ciertos samples de código). El transformer <code>gemini</code> desactiva los defaults más agresivos, pero código de producción tocando cualquier cosa adversarial — tests de auth, fuzzing — puede rebotar. Mantené una cadena de fallback (receta R5).</p>
+      </article>
+
+      <!-- R3 · OLLAMA LOCAL -->
+      <article id="r-ollama" class="mc-recipe mc-rec-priv">
+        <header class="mc-rec-head">
+          <span class="mc-rec-n">R3</span>
+          <h3 class="mc-rec-h">Local-first vía Ollama (offline / privado)</h3>
+          <span class="mc-rec-need">privacidad</span>
+        </header>
+        <p class="mc-when"><b>Cuándo</b> — trabajo air-gapped, industria regulada (salud, defensa, finanzas con datos de cliente), viaje offline, o solo preferencia: ningún token sale de tu máquina. Ollama corre un server OpenAI-compatible local; CCRouter enruta a él como a cualquier otro provider.</p>
+
+        <p class="mc-mini-h">▸ Prerrequisitos</p>
+        <pre><code>{`# instalá ollama + tirá de un modelo de coding
+brew install ollama
+ollama serve &
+ollama pull qwen2.5-coder:32b      # o deepseek-coder-v2, llama3.3:70b, etc.`}</code></pre>
+
+        <p class="mc-mini-h">▸ Fragmento de config</p>
+        <pre><code>{`"Providers": [
+  { "name": "ollama",
+    "api_base_url": "http://127.0.0.1:11434/v1/chat/completions",
+    "api_key": "ollama",                          // any string; ollama ignores it
+    "models": ["qwen2.5-coder:32b"] }
+],
+"Router": {
+  "default":    "ollama,qwen2.5-coder:32b",
+  "background": "ollama,qwen2.5-coder:32b",
+  "think":      "ollama,qwen2.5-coder:32b"
+}`}</code></pre>
+
+        <p class="mc-mini-h">▸ Configuración</p>
+        <p>Ollama tiene que estar corriendo antes de <code>ccr start</code> (o <code>ccr code</code>). En macOS, la formula de brew instala un servicio launchd; en Linux querés un unit systemd. Confirmá que está al aire con <code>curl localhost:11434/api/tags</code>.</p>
+
+        <p class="mc-gotcha"><b>Trampa</b> — los modelos locales quedan sustancialmente detrás de los modelos de frontera en tool-use y razonamiento. Esperá más loops de "voy a tener que pensar esto", tool calls malformados ocasionales, y throughput más lento. Un modelo 32B en un Mac M-series entrega 20–40 tokens/seg; modelos más chicos son más rápidos pero peores. La ganancia de privacidad/costo es real, el gap de calidad también es real.</p>
+      </article>
+
+      <!-- R4 · SUB-AGENTS A HAIKU -->
+      <article id="r-subagent" class="mc-recipe mc-rec-cost">
+        <header class="mc-rec-head">
+          <span class="mc-rec-n">R4</span>
+          <h3 class="mc-rec-h">Sub-agents a Haiku, parent a Opus</h3>
+          <span class="mc-rec-need">costo</span>
+        </header>
+        <p class="mc-when"><b>Cuándo</b> — tu agent parent dispara muchos sub-agents (investigación, file walks, validación) y cada sub-agent solo necesita seguir un handoff bien apretado. Corré el parent en Opus para orquestación; corré sub-agents en Haiku. Mismo vendor, split dramático de costo.</p>
+
+        <p class="mc-mini-h">▸ Fragmento de config</p>
+        <pre><code>{`"Providers": [
+  { "name": "anthropic",
+    "api_base_url": "https://api.anthropic.com/v1/messages",
+    "api_key": "sk-ant-...",
+    "models": ["claude-opus-4-7", "claude-haiku-4-5-20251001"] }
+],
+"Router": {
+  "default":    "anthropic,claude-opus-4-7",
+  "background": "anthropic,claude-haiku-4-5-20251001"
+}`}</code></pre>
+
+        <p class="mc-mini-h">▸ Configuración</p>
+        <p>Los dispatches de sub-agent se clasifican como <code>background</code> automáticamente por el shape del request de CC (cargan un system prompt diferente y tienen <code>parent_tool_use_id</code>). Ninguna config necesaria del lado de CC — el parent se queda en Opus, los dispatches downgradan transparentemente.</p>
+
+        <p class="mc-gotcha"><b>Trampa</b> — si forzaste un handoff de delegación de 5 campos (ver <a href={`${cookbookPath}#r6`}>cookbook R6</a>), Haiku está bien. Si tus handoffs son flojos, Haiku va a llenar los huecos con suposiciones que Opus no habría hecho. La disciplina en la frontera del dispatch es lo que hace esto seguro.</p>
+      </article>
+
+      <!-- R5 · CADENA DE FAILOVER -->
+      <article id="r-failover" class="mc-recipe mc-rec-rel">
+        <header class="mc-rec-head">
+          <span class="mc-rec-n">R5</span>
+          <h3 class="mc-rec-h">Cadena de failover: Anthropic → OpenRouter</h3>
+          <span class="mc-rec-need">confiabilidad</span>
+        </header>
+        <p class="mc-when"><b>Cuándo</b> — cargas headless de producción donde la caída de un solo provider no debería matar tu sesión <code>/goal</code>. CCRouter no tiene un operador de chain built-in, pero OpenRouter es él mismo un meta-provider con semántica de fallback — encadená a nivel <i>OpenRouter</i>, apuntá la ruta secundaria de CC allí.</p>
+
+        <p class="mc-mini-h">▸ Fragmento de config</p>
+        <pre><code>{`"Providers": [
+  { "name": "anthropic",
+    "api_base_url": "https://api.anthropic.com/v1/messages",
+    "api_key": "sk-ant-...",
+    "models": ["claude-sonnet-4-6"] },
+  { "name": "openrouter",
+    "api_base_url": "https://openrouter.ai/api/v1/chat/completions",
+    "api_key": "sk-or-...",
+    "models": ["anthropic/claude-sonnet-4.6", "openai/gpt-5", "google/gemini-2.5-pro"],
+    "transformer": { "use": ["openrouter"] } }
+],
+"Router": {
+  "default":     "anthropic,claude-sonnet-4-6",
+  "longContext": "openrouter,anthropic/claude-sonnet-4.6"
+}`}</code></pre>
+
+        <p class="mc-mini-h">▸ Configuración</p>
+        <p>Cuando Anthropic directo está al aire, tu camino default pega directo (más barato, menor latencia). Si falla (raro), podés cambiar <code>"default"</code> a la ruta de OpenRouter con una edición de config + <code>ccr stop &amp;&amp; ccr start</code> (o usá <code>ccr ui</code> para edición en vivo). Failover automático real requiere un script de router custom — fuera del alcance de esta receta.</p>
+
+        <p class="mc-gotcha"><b>Trampa</b> — OpenRouter agrega su propio margen (~5%) sobre el pricing del provider, y agrega un network hop. No lo hagas tu camino <i>primario</i> a menos que valores específicamente la semántica de chain. Es una capa de seguro, no un daily driver.</p>
+      </article>
+
+      <!-- R6 · BUDGET / TIMEOUT -->
+      <article id="r-budget" class="mc-recipe mc-rec-cost">
+        <header class="mc-rec-head">
+          <span class="mc-rec-n">R6</span>
+          <h3 class="mc-rec-h">Tope diario con API_TIMEOUT_MS</h3>
+          <span class="mc-rec-need">costo</span>
+        </header>
+        <p class="mc-when"><b>Cuándo</b> — estás corriendo sesiones <code>/goal</code> desatendidas y un loop fuera de control podría quemar el budget de una semana en una noche. CCRouter no tiene un enforcer de budget en $ built-in, pero combinar <code>API_TIMEOUT_MS</code> con <code>claude -p --max-budget-usd</code> a nivel CC te da dos topes.</p>
+
+        <p class="mc-mini-h">▸ Fragmento de config</p>
+        <pre><code>{`{
+  "API_TIMEOUT_MS": 120000,                       // tope de 2 min por request
+  "LOG": true,
+  "LOG_LEVEL": "info",
+  "Providers": [ /* ... */ ],
+  "Router": { /* ... */ }
+}`}</code></pre>
+
+        <p class="mc-mini-h">▸ Configuración — pareando con tope de budget de CC</p>
+        <pre><code>{`# /goal headless con budget Y timeout por request
+ccr start &
+claude -p \\
+  --permission-mode bypassPermissions \\
+  --max-turns 40 \\
+  --max-budget-usd 2.00 \\
+  --output-format json \\
+  "/goal cada issue marcado 'needs-triage' es procesado. Frená tras 40 turns."`}</code></pre>
+
+        <p class="mc-gotcha"><b>Trampa</b> — <code>API_TIMEOUT_MS</code> en CCRouter solo limita un <i>único</i> request. Un loop fuera de control de 100 turns todavía puede acumular gasto si cada turn es rápido. La flag <code>--max-budget-usd</code> en <code>claude -p</code> es el tope hard real; tratá <code>API_TIMEOUT_MS</code> como guardia de "no quedar colgado en un provider flaky", no como primitiva de budget.</p>
+      </article>
+
+      <!-- R7 · PER-PROJECT -->
+      <article id="r-perproject" class="mc-recipe mc-rec-scope">
+        <header class="mc-rec-head">
+          <span class="mc-rec-n">R7</span>
+          <h3 class="mc-rec-h">Override de enrutamiento por proyecto</h3>
+          <span class="mc-rec-need">alcance</span>
+        </header>
+        <p class="mc-when"><b>Cuándo</b> — la mayoría de proyectos quiere la cadena cheap-default, pero un proyecto específico (datos regulados, refactor de alto riesgo) necesita quedarse en Anthropic para todo. Apagá CCR solo para ese workspace sin desinstalar.</p>
+
+        <p class="mc-mini-h">▸ Enfoque 1 — env escopada por workspace</p>
+        <pre><code>{`# en el .envrc (direnv) del proyecto o el rc del shell
+unset ANTHROPIC_BASE_URL
+unset ANTHROPIC_AUTH_TOKEN
+# en este workspace, claude habla directo con Anthropic`}</code></pre>
+
+        <p class="mc-mini-h">▸ Enfoque 2 — configs distintas por path</p>
+        <pre><code>{`# levantá CCR con una config específica del proyecto
+CCR_CONFIG_PATH=~/.claude-code-router/configs/regulated.json ccr code
+# (o symlinkeá ~/.claude-code-router/config.json antes de cada sesión)`}</code></pre>
+
+        <p class="mc-mini-h">▸ Configuración — ejemplo direnv</p>
+        <pre><code>{`# .envrc en el proyecto de alto riesgo
+export ANTHROPIC_API_KEY="sk-ant-..."   # directo
+unset ANTHROPIC_BASE_URL                 # para que claude no pegue a CCR
+unset ANTHROPIC_AUTH_TOKEN
+# todos los otros proyectos mantienen ccr activate activo`}</code></pre>
+
+        <p class="mc-gotcha"><b>Trampa</b> — no hay "config por proyecto" de primera-clase en CCRouter hoy; el enfoque de env escopada por workspace es la respuesta pragmática. Si cambiás seguido, mantené dos configs nombradas (<code>config-cheap.json</code>, <code>config-direct.json</code>) y symlinkeá — más fácil que acordarte de unset/reset env cada vez.</p>
+      </article>
+
+      <!-- R8 · TRANSFORMER CUSTOM -->
+      <article id="r-transformer" class="mc-recipe mc-rec-compat">
+        <header class="mc-rec-head">
+          <span class="mc-rec-n">R8</span>
+          <h3 class="mc-rec-h">Transformer custom — descarta reasoning tokens</h3>
+          <span class="mc-rec-need">compat</span>
+        </header>
+        <p class="mc-when"><b>Cuándo</b> — estás enrutando a un modelo de reasoning (DeepSeek R1, estilo o3) y el output de <code>reasoning_content</code> se está filtrando a la vista de transcript de CC, comiendo contexto. Un transformer custom puede descartarlo del lado server antes de que CC vea el response.</p>
+
+        <p class="mc-mini-h">▸ Fragmento de config — registrá el transformer</p>
+        <pre><code>{`{
+  "transformers": [
+    {
+      "path": "~/.claude-code-router/plugins/strip-reasoning.js",
+      "options": { "preserveOnError": true }
+    }
+  ],
+  "Providers": [
+    { "name": "deepseek-reasoner",
+      "api_base_url": "https://api.deepseek.com/v1/chat/completions",
+      "api_key": "sk-...",
+      "models": ["deepseek-reasoner"],
+      "transformer": { "use": ["deepseek", "strip-reasoning"] } }
+  ],
+  "Router": { "think": "deepseek-reasoner,deepseek-reasoner" }
+}`}</code></pre>
+
+        <p class="mc-mini-h">▸ El script del transformer — shape mínimo</p>
+        <pre><code>{`// ~/.claude-code-router/plugins/strip-reasoning.js
+module.exports = {
+  name: "strip-reasoning",
+  transformResponse(response, _request, _options) {
+    if (response?.choices) {
+      for (const c of response.choices) {
+        if (c.message && c.message.reasoning_content) {
+          delete c.message.reasoning_content;
+        }
+      }
+    }
+    return response;
+  }
+};`}</code></pre>
+
+        <p class="mc-mini-h">▸ Configuración</p>
+        <p>Reiniciá CCR tras la edición (<code>ccr stop &amp;&amp; ccr start</code>). Testeá emitiendo un request que pegue a la ruta <code>think</code> e inspeccionando el transcript de CC — la chain de razonamiento debería haber desaparecido, solo queda la respuesta.</p>
+
+        <p class="mc-gotcha"><b>Trampa</b> — descartar reasoning ayuda al budget de contexto pero perdés visibilidad del <i>por qué</i> el modelo tomó una decisión. Para trabajo de alto riesgo, logueá el <code>reasoning_content</code> a un archivo en el transformer (no solo borres) para que los post-mortems sean posibles. El transformer built-in <code>reasoning</code> maneja los casos oficiales; este es para control fino.</p>
+      </article>
+
+      <footer class="mc-foot">
+        <div class="mc-foot-band">
+          <span class="mc-tag">EXTIENDE LA CAPA DE MODELO</span>
+          <span class="mc-foot-sep">|</span>
+          <span class="mc-tag">MISMA UX · CUALQUIER MODELO</span>
+        </div>
+        <p class="mc-foot-next">
+          Adónde ir después:
+          <a href={masterclassPath}>Master Class principal</a> · <a href={goalPath}>/goal Class</a> · <a href={cookbookPath}>Hook Cookbook</a> · <a href={cheatsheetPath}>cheatsheet denso</a> · <a href={REPO_URL} target="_blank" rel="noopener">repo</a>.
+        </p>
+        <p class="mc-foot-sources">
+          Fuentes: <a href="https://github.com/musistudio/claude-code-router" target="_blank" rel="noopener">musistudio/claude-code-router</a> · <a href="https://musistudio.github.io/claude-code-router/" target="_blank" rel="noopener">docs oficiales</a> · <a href="https://www.datacamp.com/tutorial/claude-code-router" target="_blank" rel="noopener">tutorial DataCamp</a> · <a href="https://claudelog.com/claude-code-mcps/claude-code-router/" target="_blank" rel="noopener">ClaudeLog</a> · <a href="https://www.getaiperks.com/en/ai/claude-code-router-guide" target="_blank" rel="noopener">guía GetAIPerks</a> · <a href="https://dev.to/stevengonsalvez/claude-code-router-use-any-model-with-claude-codes-interface-c6a" target="_blank" rel="noopener">Steven Gonsalvez (DEV)</a>.
+        </p>
+      </footer>
+
+    </main>
+
+    <style is:global>
+      :root[data-theme="poster"] {
+        --p-bg: #0a0e1f;
+        --p-bg-2: #0e1530;
+        --p-ink: #e5e7eb;
+        --p-ink-dim: #9ca3af;
+        --p-ink-faint: #6b7280;
+        --p-green: #39ff14;
+        --p-orange: #ff9933;
+        --p-red: #ff4d4d;
+        --p-cyan: #00e5ff;
+        --p-magenta: #ff44ff;
+        --p-violet: #a78bfa;
+        --p-yellow: #ffe066;
+        --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+      }
+      html, body { background: var(--p-bg); color: var(--p-ink); overflow-x: clip; }
+      .mc-page, .mc-mod, .mc-mod-body, .mc-top, .mc-recipe { min-width: 0; }
+      .mc-body { font-family: var(--font-sans); margin: 0; background: radial-gradient(ellipse at top, var(--p-bg-2), var(--p-bg) 70%); min-height: 100vh; padding: 0 0 60px; overflow-x: clip; overflow-wrap: anywhere; max-width: 100%; }
+      .mc-top { display: flex; align-items: center; padding: 14px 32px 0; font-family: var(--font-mono); font-size: 11px; gap: 16px; flex-wrap: wrap; }
+      .mc-top-tools { margin-left: auto; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+      .mc-back { color: var(--p-cyan); text-decoration: none; letter-spacing: 0.04em; border-bottom: 1px dashed transparent; }
+      .mc-back:hover { border-bottom-color: var(--p-cyan); }
+      .mc-tool-btn { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; color: var(--p-orange); background: transparent; border: 1px solid rgba(255,153,51,0.4); border-radius: 2px; padding: 3px 10px; cursor: pointer; }
+      .mc-tool-btn:hover { color: var(--p-yellow); border-color: var(--p-yellow); }
+
+      .mc-page { max-width: 900px; margin: 0 auto; padding: 24px 32px; }
+      @media (max-width: 720px) { .mc-page { padding: 16px; } }
+
+      .mc-banner { text-align: center; margin-bottom: 30px; }
+      .mc-strip { font-family: var(--font-mono); font-size: 10.5px; color: var(--p-orange); letter-spacing: 0.12em; margin-bottom: 12px; display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; }
+      .mc-tag { white-space: nowrap; }
+      .mc-title { font-family: var(--font-mono); font-size: 56px; font-weight: 800; letter-spacing: -0.02em; margin: 8px 0 14px; line-height: 0.98; }
+      .mc-title-line { display: block; color: var(--p-ink); }
+      .mc-title-accent { color: var(--p-green); }
+      .mc-sub { color: var(--p-ink-dim); font-size: 14px; margin: 0; }
+      .mc-sub code { color: var(--p-orange); }
+      @media (max-width: 720px) { .mc-title { font-size: 38px; } .mc-strip { font-size: 9.5px; gap: 10px; } }
+
+      .mc-intro { background: rgba(0,0,0,0.3); border-left: 3px solid var(--p-cyan); border-radius: 2px; padding: 18px 22px; margin: 18px 0 30px; font-size: 14px; line-height: 1.6; }
+      .mc-intro-h { font-family: var(--font-mono); font-size: 12px; color: var(--p-cyan); letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 8px; }
+      .mc-intro-h + p, .mc-intro-h + ul { margin-top: 0; }
+      .mc-intro p { margin: 0 0 14px; color: var(--p-ink); }
+      .mc-intro-ul { margin: 0 0 14px; padding-left: 20px; color: var(--p-ink); }
+      .mc-intro-ul li { margin-bottom: 4px; }
+      .mc-intro code { color: var(--p-orange); font-family: var(--font-mono); }
+
+      .mc-toc { background: rgba(0,0,0,0.3); border-left: 3px solid var(--p-magenta); border-radius: 2px; padding: 16px 22px; margin-bottom: 36px; }
+      .mc-toc-h { font-family: var(--font-mono); font-size: 11px; color: var(--p-magenta); letter-spacing: 0.08em; margin-bottom: 10px; font-weight: 700; }
+      .mc-toc-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 18px; }
+      @media (max-width: 720px) { .mc-toc-list { grid-template-columns: 1fr; } }
+      .mc-toc-list a { display: flex; align-items: baseline; gap: 10px; padding: 6px 0; color: var(--p-ink); text-decoration: none; font-family: var(--font-mono); font-size: 12.5px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+      .mc-toc-list a:hover { color: var(--p-cyan); }
+      .mc-toc-n { color: var(--p-orange); font-weight: 700; min-width: 30px; }
+      .mc-toc-t { flex: 1; }
+      .mc-toc-tag { font-size: 9.5px; color: var(--p-ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
+      .mc-toc-list a[data-tag="foundations"] .mc-toc-tag { color: var(--p-cyan); }
+      .mc-toc-list a[data-tag="craft"]       .mc-toc-tag { color: var(--p-magenta); }
+      .mc-toc-list a[data-tag="internals"]   .mc-toc-tag { color: var(--p-violet); }
+      .mc-toc-list a[data-tag="production"]  .mc-toc-tag { color: var(--p-yellow); }
+      .mc-toc-list a[data-tag="recipes"]     .mc-toc-tag { color: var(--p-green); }
+      .mc-toc-sep { grid-column: 1 / -1; border-top: 1px dashed rgba(255,255,255,0.08); margin-top: 6px; padding-top: 6px; }
+
+      .mc-mod { margin-bottom: 48px; scroll-margin-top: 20px; }
+      .mc-mod-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+      .mc-mod-n { font-family: var(--font-mono); font-size: 22px; font-weight: 800; color: var(--p-orange); }
+      .mc-mod-h { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--p-ink); margin: 0; flex: 1; letter-spacing: -0.01em; }
+      .mc-mod-tag { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--p-ink-faint); }
+      .mc-mod-foundations .mc-mod-tag { color: var(--p-cyan); }
+      .mc-mod-craft       .mc-mod-tag { color: var(--p-magenta); }
+      .mc-mod-internals   .mc-mod-tag { color: var(--p-violet); }
+      .mc-mod-production  .mc-mod-tag { color: var(--p-yellow); }
+      .mc-mod-body { font-size: 14px; line-height: 1.65; color: var(--p-ink); }
+      .mc-mod-body code { color: var(--p-orange); font-family: var(--font-mono); font-size: 12.5px; }
+      .mc-mod-body p { margin: 0 0 14px; }
+      .mc-mod-body ul, .mc-mod-body ol { margin: 0 0 14px; padding-left: 22px; }
+      .mc-mod-body li { margin-bottom: 4px; }
+      .mc-mod-body strong, .mc-mod-body b { color: var(--p-ink); }
+
+      .mc-tldr { background: rgba(0,229,255,0.06); border-left: 3px solid var(--p-cyan); padding: 10px 14px; font-size: 14px; margin: 0 0 18px; border-radius: 2px; }
+      .mc-tldr b { color: var(--p-cyan); margin-right: 6px; letter-spacing: 0.06em; }
+      .mc-mod-body .mc-mini-h, .mc-recipe .mc-mini-h { font-family: var(--font-mono); font-size: 11px; color: var(--p-magenta); letter-spacing: 0.06em; text-transform: uppercase; margin: 18px 0 8px; }
+      .mc-mod-body pre, .mc-recipe pre { background: rgba(0,0,0,0.4); border-left: 2px solid var(--p-green); padding: 10px 14px; font-size: 12px; color: var(--p-ink); overflow-x: auto; margin: 8px 0 16px; border-radius: 2px; }
+      .mc-mod-body pre code, .mc-recipe pre code { color: var(--p-ink); }
+      .mc-mod-body .mc-diagram { background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.1); padding: 12px 14px; margin: 10px 0 16px; border-radius: 2px; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.5; color: var(--p-ink); white-space: pre; overflow-x: auto; }
+      .mc-mod-body .mc-diagram .d-key { color: var(--p-orange); }
+      .mc-mod-body .mc-diagram .d-dim { color: var(--p-ink-faint); }
+      .mc-mod-body .mc-diagram .d-acc { color: var(--p-cyan); }
+      .mc-mod-body .mc-diagram .d-mag { color: var(--p-magenta); }
+      .mc-mod-body .mc-deep { display: inline-block; font-family: var(--font-mono); font-size: 11.5px; color: var(--p-yellow); margin-top: 4px; padding: 4px 0; border-bottom: 1px dashed var(--p-yellow); }
+      .mc-mod-body .mc-deep:hover { color: var(--p-orange); border-bottom-color: var(--p-orange); }
+      .mc-next { display: inline-block; font-family: var(--font-mono); font-size: 11.5px; color: var(--p-green); margin-top: 18px; padding: 6px 0; text-decoration: none; letter-spacing: 0.04em; border-bottom: 1px dashed var(--p-green); }
+      .mc-next:hover { color: var(--p-orange); border-bottom-color: var(--p-orange); }
+
+      /* === COOKBOOK SECTION === */
+      .mc-cb-banner { text-align: center; padding: 30px 0 22px; margin: 32px 0 22px; border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.05); }
+      .mc-cb-title { font-family: var(--font-mono); font-size: 32px; font-weight: 800; letter-spacing: -0.01em; margin: 8px 0 10px; color: var(--p-green); }
+      .mc-cb-sub { color: var(--p-ink-dim); font-size: 13px; margin: 0; }
+      .mc-cb-sub code { color: var(--p-orange); }
+
+      .mc-rec-toc { background: rgba(0,0,0,0.3); border-left: 3px solid var(--p-green); border-radius: 2px; padding: 14px 22px; margin-bottom: 32px; }
+      .mc-rec-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 18px; }
+      @media (max-width: 720px) { .mc-rec-list { grid-template-columns: 1fr; } }
+      .mc-rec-list a { display: flex; align-items: baseline; gap: 10px; padding: 5px 0; color: var(--p-ink); text-decoration: none; font-family: var(--font-mono); font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+      .mc-rec-list a:hover { color: var(--p-green); }
+      .mc-rec-toc-n { color: var(--p-green); font-weight: 700; min-width: 28px; }
+      .mc-rec-toc-t { flex: 1; }
+      .mc-rec-toc-tag { font-size: 9.5px; color: var(--p-ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
+
+      .mc-recipe { border-left: 3px solid var(--p-ink-faint); background: rgba(0,0,0,0.18); border-radius: 2px; padding: 18px 22px; margin-bottom: 22px; scroll-margin-top: 20px; }
+      .mc-rec-cost   { border-left-color: var(--p-green);   }
+      .mc-rec-cap    { border-left-color: var(--p-cyan);    }
+      .mc-rec-priv   { border-left-color: var(--p-violet);  }
+      .mc-rec-rel    { border-left-color: var(--p-yellow);  }
+      .mc-rec-scope  { border-left-color: var(--p-magenta); }
+      .mc-rec-compat { border-left-color: var(--p-orange);  }
+      .mc-rec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+      .mc-rec-n { font-family: var(--font-mono); font-size: 16px; font-weight: 800; color: var(--p-green); }
+      .mc-rec-h { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--p-ink); margin: 0; flex: 1; letter-spacing: -0.005em; }
+      .mc-rec-h code { color: var(--p-orange); font-size: 14px; }
+      .mc-rec-need { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--p-ink-faint); }
+      .mc-rec-cost   .mc-rec-need { color: var(--p-green);   }
+      .mc-rec-cap    .mc-rec-need { color: var(--p-cyan);    }
+      .mc-rec-priv   .mc-rec-need { color: var(--p-violet);  }
+      .mc-rec-rel    .mc-rec-need { color: var(--p-yellow);  }
+      .mc-rec-scope  .mc-rec-need { color: var(--p-magenta); }
+      .mc-rec-compat .mc-rec-need { color: var(--p-orange);  }
+
+      .mc-when { font-size: 13.5px; line-height: 1.55; margin: 0 0 6px; color: var(--p-ink); }
+      .mc-when b { color: var(--p-green); margin-right: 6px; }
+      .mc-when code { color: var(--p-orange); font-family: var(--font-mono); font-size: 12px; }
+      .mc-recipe p { font-size: 13.5px; line-height: 1.55; margin: 0 0 10px; }
+      .mc-recipe p code { color: var(--p-orange); font-family: var(--font-mono); font-size: 12px; }
+      .mc-recipe a { color: var(--p-cyan); text-decoration: none; border-bottom: 1px dashed transparent; }
+      .mc-recipe a:hover { border-bottom-color: var(--p-cyan); }
+      .mc-gotcha { padding: 10px 14px; background: rgba(255,77,77,0.08); border-left: 2px solid var(--p-red); border-radius: 2px; font-size: 12.5px; color: var(--p-ink); line-height: 1.5; margin-top: 8px; }
+      .mc-gotcha b { color: var(--p-red); margin-right: 6px; }
+      .mc-gotcha code { color: var(--p-orange); font-family: var(--font-mono); font-size: 11px; }
+
+      .mc-foot { margin-top: 50px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.08); text-align: center; }
+      .mc-foot-band { font-family: var(--font-mono); font-size: 11px; color: var(--p-green); letter-spacing: 0.12em; margin-bottom: 14px; }
+      .mc-foot-sep { color: var(--p-ink-faint); margin: 0 14px; }
+      .mc-foot-next, .mc-foot-sources { font-size: 13px; color: var(--p-ink-dim); margin: 6px 0; }
+      .mc-foot-sources { font-size: 11.5px; color: var(--p-ink-faint); }
+      .mc-foot-next a, .mc-foot-sources a { color: var(--p-cyan); text-decoration: none; border-bottom: 1px dashed transparent; }
+      .mc-foot-next a:hover, .mc-foot-sources a:hover { border-bottom-color: var(--p-cyan); }
+
+      @media print {
+        @page { margin: 14mm 12mm; size: A4; }
+        html, body, .mc-body { background: #fff !important; color: #111 !important; }
+        .mc-top, .mc-toc, .mc-rec-toc, .mc-next, .mc-foot-band, .mc-back, .mc-tool-btn { display: none !important; }
+        .mc-page { max-width: none; padding: 0; margin: 0; }
+        .mc-banner, .mc-cb-banner { margin-bottom: 8mm; page-break-after: avoid; }
+        .mc-strip { color: #555 !important; }
+        .mc-title, .mc-cb-title { color: #111 !important; font-size: 28pt; }
+        .mc-title-accent { color: #111 !important; }
+        .mc-sub, .mc-cb-sub { color: #444 !important; font-size: 10pt; }
+        .mc-intro { background: #fafafa !important; border-left-color: #888 !important; color: #111 !important; page-break-after: always; font-size: 10pt; }
+        .mc-intro-h { color: #111 !important; }
+        .mc-intro code { color: #b04500 !important; }
+        .mc-mod, .mc-recipe { page-break-before: always; page-break-inside: avoid; margin-bottom: 0; background: #fff !important; border-left-color: #555 !important; }
+        .mc-mod:first-of-type { page-break-before: auto; }
+        .mc-mod-head, .mc-rec-head { border-bottom-color: #ccc !important; }
+        .mc-mod-n, .mc-mod-h, .mc-rec-n, .mc-rec-h { color: #111 !important; }
+        .mc-mod-tag, .mc-rec-need { color: #666 !important; }
+        .mc-mod-body, .mc-recipe { color: #111 !important; font-size: 10pt; line-height: 1.55; }
+        .mc-mod-body code, .mc-recipe code, .mc-when code { color: #b04500 !important; }
+        .mc-tldr { background: #fff7e6 !important; border-left-color: #d97706 !important; color: #111 !important; }
+        .mc-tldr b { color: #d97706 !important; }
+        .mc-mini-h { color: #666 !important; }
+        .mc-mod-body pre, .mc-mod-body .mc-diagram, .mc-recipe pre { background: #f4f4f4 !important; border-left-color: #888 !important; color: #111 !important; font-size: 9pt; page-break-inside: avoid; }
+        .mc-mod-body .mc-diagram .d-key { color: #b04500 !important; }
+        .mc-mod-body .mc-diagram .d-dim { color: #777 !important; }
+        .mc-mod-body .mc-diagram .d-acc { color: #0066aa !important; }
+        .mc-mod-body .mc-diagram .d-mag { color: #8b008b !important; }
+        .mc-mod-body .mc-deep { color: #0066aa !important; border-bottom-color: #0066aa !important; }
+        .mc-mod-body .mc-deep::after { content: " (" attr(href) ")"; font-size: 8pt; color: #777; }
+        .mc-gotcha { background: #fef0f0 !important; border-left-color: #b91c1c !important; color: #111 !important; font-size: 9pt; }
+        .mc-gotcha b { color: #b91c1c !important; }
+        .mc-when b { color: #2c7a2c !important; }
+        .mc-foot { border-top: 1px solid #ccc; margin-top: 8mm; padding-top: 4mm; }
+        .mc-foot-next, .mc-foot-sources { color: #444 !important; font-size: 9pt; }
+        .mc-foot-next a, .mc-foot-sources a { color: #0066aa !important; }
+        .mc-foot-next a::after, .mc-foot-sources a::after { content: " (" attr(href) ")"; font-size: 8pt; color: #777; }
+      }
+    </style>
+
+    <script is:inline>
+      (() => {
+        const btn = document.getElementById("mc-print");
+        if (btn) btn.addEventListener("click", () => window.print());
+      })();
+    </script>
+  </body>
+</html>
