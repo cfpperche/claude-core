@@ -5,7 +5,7 @@
 // Add a new surface? Add a row to RESOURCES below and a slug to CurrentPage.
 // Every page that imports this component picks it up automatically.
 
-export type CurrentPage = "cheatsheet" | "masterclass" | "goal" | "cookbook" | "routing";
+export type CurrentPage = "cheatsheet" | "masterclass" | "goal" | "cookbook" | "routing" | "marketplace";
 
 interface Props {
   current: CurrentPage;
@@ -25,6 +25,7 @@ const masterclassHref = `${base}/masterclass${localeSegment}/claude-code/`;
 const goalHref        = `${base}/masterclass${localeSegment}/goal-command/`;
 const cookbookHref    = `${base}/cookbook${localeSegment}/hooks/`;
 const routingHref     = `${base}/masterclass${localeSegment}/routing/`;
+const marketplaceHref = `${base}/marketplace${localeSegment}/plugins/`;
 
 // Per-locale UI copy. Resources label + per-card title/desc.
 type LocaleCopy = {
@@ -34,6 +35,7 @@ type LocaleCopy = {
   goal: { title: string; desc: string };
   cookbook: { title: string; desc: string };
   routing: { title: string; desc: string };
+  marketplace: { title: string; desc: string };
   youAreHere: string;
 };
 
@@ -45,6 +47,7 @@ const COPY: Record<"en" | "pt" | "es", LocaleCopy> = {
     goal:        { title: "/goal Class",    desc: "Deep dive on /goal · worker vs evaluator" },
     cookbook:    { title: "Hook Cookbook",  desc: "10 production-ready hook recipes" },
     routing:     { title: "Routing Class",  desc: "CCRouter · extend the model layer · 4 mods + 8 recipes" },
+    marketplace: { title: "Marketplace",    desc: "Plugin marketplace · claude-code-setup · 14 curated picks" },
     youAreHere:  " · you are here",
   },
   pt: {
@@ -54,6 +57,7 @@ const COPY: Record<"en" | "pt" | "es", LocaleCopy> = {
     goal:        { title: "/goal Class",    desc: "Aprofundamento em /goal · worker vs evaluator" },
     cookbook:    { title: "Hook Cookbook",  desc: "10 receitas de hooks prontas pra produção" },
     routing:     { title: "Routing Class",  desc: "CCRouter · estendendo a camada de modelo · 4 mods + 8 receitas" },
+    marketplace: { title: "Marketplace",    desc: "Marketplace de plugins · claude-code-setup · 14 escolhas curadas" },
     youAreHere:  " · você está aqui",
   },
   es: {
@@ -63,6 +67,7 @@ const COPY: Record<"en" | "pt" | "es", LocaleCopy> = {
     goal:        { title: "/goal Class",    desc: "Inmersión en /goal · worker vs evaluator" },
     cookbook:    { title: "Hook Cookbook",  desc: "10 recetas de hooks listas para producción" },
     routing:     { title: "Routing Class",  desc: "CCRouter · extiende la capa de modelo · 4 mods + 8 recetas" },
+    marketplace: { title: "Marketplace",    desc: "Marketplace de plugins · claude-code-setup · 14 selecciones curadas" },
     youAreHere:  " · estás aquí",
   },
 };
@@ -81,6 +86,7 @@ const RESOURCES: {
   { slug: "goal",        num: "02", title: t.goal.title,        desc: t.goal.desc,        href: goalHref        },
   { slug: "cookbook",    num: "03", title: t.cookbook.title,    desc: t.cookbook.desc,    href: cookbookHref    },
   { slug: "routing",     num: "04", title: t.routing.title,     desc: t.routing.desc,     href: routingHref     },
+  { slug: "marketplace", num: "05", title: t.marketplace.title, desc: t.marketplace.desc, href: marketplaceHref },
 ];
 ---
 

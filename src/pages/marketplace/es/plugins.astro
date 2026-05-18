@@ -1,0 +1,548 @@
+---
+import "../../../styles/global.css";
+import { REPO_URL } from "../../../i18n/locales";
+import ResourcesMenu from "../../../components/ResourcesMenu.astro";
+import LanguageSwitcher from "../../../components/LanguageSwitcher.astro";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const siteUrl = "https://cfpperche.github.io";
+const CC_VERSION = "2.1.143";
+const pageTitle = `Claude Code · Marketplace de Plugins · v${CC_VERSION}`;
+const pageDesc = `El marketplace oficial de plugins de Anthropic para Claude Code v${CC_VERSION}: claude-code-setup como entrada canónica, UX de /plugin, 14 plugins curados en 6 categorías, marketplaces de terceros, modelo de seguridad.`;
+
+type Cat =
+  | "bootstrap"
+  | "integration"
+  | "workflow"
+  | "lsp"
+  | "output"
+  | "third-party";
+
+const categories: Record<Cat, { label: string; color: string }> = {
+  bootstrap:     { label: "bootstrap",        color: "orange"   },
+  integration:   { label: "integraciones externas", color: "magenta" },
+  workflow:      { label: "flujos de desarrollo", color: "cyan" },
+  lsp:           { label: "inteligencia de código (LSP)", color: "green" },
+  output:        { label: "estilos de salida", color: "yellow"   },
+  "third-party": { label: "terceros",         color: "violet"   },
+};
+
+const plugins: {
+  n: number;
+  slug: string;
+  cat: Cat;
+  install: string;
+  title: string;
+  oneLine: string;
+}[] = [
+  { n: 1,  slug: "claude-code-setup", cat: "bootstrap",   install: "claude-code-setup@claude-plugins-official", title: "claude-code-setup",   oneLine: "Analizador read-only que escanea tu codebase y recomienda las 1-2 mejores automatizaciones por categoría (MCP / Skills / Hooks / Subagents / Slash commands)." },
+  { n: 2,  slug: "claude-md-management", cat: "bootstrap", install: "claude-md-management@claude-plugins-official", title: "claude-md-management", oneLine: "Mantiene y mejora archivos CLAUDE.md — el archivo de orientación de proyecto que toda sesión de Claude Code lee primero." },
+  { n: 3,  slug: "github",            cat: "integration", install: "github@claude-plugins-official",            title: "github",              oneLine: "MCP server oficial de GitHub — repos, issues, PRs, releases, búsqueda de código, edición de archivos vía auth gh-API." },
+  { n: 4,  slug: "gitlab",            cat: "integration", install: "gitlab@claude-plugins-official",            title: "gitlab",              oneLine: "Integración DevOps de GitLab — merge requests, pipelines, variables de CI, búsqueda de proyectos." },
+  { n: 5,  slug: "atlassian",         cat: "integration", install: "atlassian@claude-plugins-official",         title: "atlassian",           oneLine: "Jira + Confluence — lee tickets, comenta, transiciona estado, busca docs." },
+  { n: 6,  slug: "context7",          cat: "integration", install: "context7@claude-plugins-official",          title: "context7",            oneLine: "MCP de lookup de docs de Upstash — trae documentación al día de bibliotecas por nombre en lugar de APIs alucinadas." },
+  { n: 7,  slug: "commit-commands",   cat: "workflow",    install: "commit-commands@claude-plugins-official",   title: "commit-commands",     oneLine: "Slash-commands para el flujo de git commit + push + PR — redacta el mensaje, hace stage, commitea, hace push." },
+  { n: 8,  slug: "code-review",       cat: "workflow",    install: "code-review@claude-plugins-official",       title: "code-review",         oneLine: "Agente especializado que revisa un PR o rama — sub-agentes de seguridad, performance, accesibilidad y nomenclatura en un solo despacho." },
+  { n: 9,  slug: "frontend-design",   cat: "workflow",    install: "frontend-design@claude-plugins-official",   title: "frontend-design",     oneLine: "Skill para UI frontend distintiva y production-grade — moodboarding, design tokens, composición de componentes." },
+  { n: 10, slug: "typescript-lsp",    cat: "lsp",         install: "typescript-lsp@claude-plugins-official",    title: "typescript-lsp",      oneLine: "Language server de TypeScript — diagnósticos automáticos en cada edición, jump-to-def, find-refs, hover de tipos." },
+  { n: 11, slug: "pyright-lsp",       cat: "lsp",         install: "pyright-lsp@claude-plugins-official",       title: "pyright-lsp",         oneLine: "Pyright (Microsoft) como language server — type checking + diagnósticos de Python en el mismo turno que la edición." },
+  { n: 12, slug: "rust-analyzer-lsp", cat: "lsp",         install: "rust-analyzer-lsp@claude-plugins-official", title: "rust-analyzer-lsp",   oneLine: "rust-analyzer como language server — errores de tipo, borrow checker y resolución de traits de Rust en línea." },
+  { n: 13, slug: "explanatory-output-style", cat: "output", install: "explanatory-output-style@claude-plugins-official", title: "explanatory-output-style", oneLine: "Output style que antepone una nota educativa sobre el PORQUÉ de cada decisión de implementación — útil en pairing/onboarding." },
+  { n: 14, slug: "claude-code-plugins-demo", cat: "third-party", install: "<plugin>@anthropics-claude-code", title: "claude-code (marketplace demo)", oneLine: "Plugins de referencia de Anthropic, no preinstalados — agrega vía /plugin marketplace add anthropics/claude-code. Útiles como templates para crear los tuyos." },
+];
+---
+
+<!doctype html>
+<html lang="es" data-theme="poster">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDesc} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDesc} />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content={`${siteUrl}${base}/marketplace/es/plugins/`} />
+    <meta property="og:locale" content="es" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+  </head>
+  <body class="mp-body">
+
+    <div class="mp-top">
+      <a href={`${base}/es/`} class="mp-back">← claude-core</a>
+      <ResourcesMenu current="marketplace" locale="es" />
+      <div class="mp-top-tools">
+        <LanguageSwitcher
+          enHref={`${base}/marketplace/plugins/`}
+          ptHref={`${base}/marketplace/pt/plugins/`}
+          esHref={`${base}/marketplace/es/plugins/`}
+          current="es"
+        />
+        <button id="mp-print" type="button" class="mp-tool-btn" title="Imprimir como PDF (usa el PDF del navegador)">
+          <span aria-hidden="true">↓</span> PDF
+        </button>
+      </div>
+    </div>
+
+    <main class="mp-page">
+
+      <header class="mp-banner">
+        <div class="mp-strip">
+          <span class="mp-tag">▮ CLAUDE-CORE · ACADEMY</span>
+          <span class="mp-tag">CLAUDE CODE v{CC_VERSION}</span>
+          <span class="mp-tag">14 PLUGINS · 6 CATEGORÍAS ▮</span>
+        </div>
+        <h1 class="mp-title">
+          <span class="mp-title-line">MARKETPLACE</span>
+          <span class="mp-title-line mp-title-accent">DE PLUGINS</span>
+        </h1>
+        <p class="mp-sub">
+          La mayoría de los usuarios de Claude Code todavía corre la versión vanilla. El poder real vive en el marketplace oficial — preinstalado, a un <code>/plugin</code> de distancia, modelado sobre las mismas primitivas que este sitio enseña (hooks, skills, MCP, subagents). Esta página cubre la UX de descubrimiento, el punto de entrada canónico (<code>claude-code-setup</code>), 14 plugins elegidos a mano en 6 categorías y el modelo de seguridad que deberías tener en mente antes de instalar nada.
+        </p>
+      </header>
+
+      <section class="mp-intro">
+        <h2 class="mp-intro-h">Qué es un marketplace, en 30 segundos</h2>
+        <p>
+          Un <b>marketplace</b> es un catálogo de <b>plugins</b>. Un <b>plugin</b> es un bundle de <code>skills</code> + <code>agents</code> + <code>hooks</code> + <code>MCP servers</code> + <code>slash commands</code> + <code>integraciones LSP</code> — las mismas primitivas que escribirías a mano, empaquetadas para distribución. El marketplace oficial de Anthropic (<code>claude-plugins-official</code>) se auto-registra cuando inicias Claude Code. Otros marketplaces — incluyendo el demo de la misma Anthropic, el privado de tu equipo, o cualquiera de terceros — los agregas explícitamente.
+        </p>
+        <h2 class="mp-intro-h">El modelo en dos pasos</h2>
+        <ol class="mp-intro-ol">
+          <li><b>Agrega el marketplace</b> — registra el catálogo. Ningún plugin instalado todavía.</li>
+          <li><b>Instala plugins individualmente</b> — navega, elige, instala en uno de los tres scopes.</li>
+        </ol>
+        <p class="mp-intro-note">Metáfora de app store: agregar la tienda te da la superficie de navegación; instalar es por-app, por-scope. Todo el flujo vive detrás de un único slash command — <code>/plugin</code>.</p>
+      </section>
+
+      <!-- ===== §1 la UX de /plugin ===== -->
+
+      <section class="mp-mod mp-fam-orange" id="m1">
+        <header class="mp-mod-head">
+          <span class="mp-mod-n">§1</span>
+          <h2 class="mp-mod-h">El comando /plugin — cuatro pestañas</h2>
+        </header>
+        <p class="mp-mod-when"><b>Qué</b> — <code>/plugin</code> abre un gestor de cuatro pestañas. Cicla con <kbd>Tab</kbd> (o <kbd>Shift+Tab</kbd> hacia atrás).</p>
+
+        <ul class="mp-mod-list">
+          <li><b>Discover</b> — navega plugins desde todos los marketplaces registrados. Filtra por nombre o descripción. Presiona <kbd>Enter</kbd> en un plugin para ver detalles e instalar.</li>
+          <li><b>Installed</b> — lista de plugins instalados, agrupada por scope, ordenada con errores de carga y dependencias no resueltas primero. <kbd>f</kbd> para favoritear; escribe para filtrar; <kbd>Enter</kbd> para ver detalle (habilitar / deshabilitar / desinstalar).</li>
+          <li><b>Marketplaces</b> — gestiona qué catálogos están registrados. Agrega, refresca, elimina, toggle de auto-update.</li>
+          <li><b>Errors</b> — cualquier plugin que falló al cargar (frecuentemente: binario LSP faltando en <code>$PATH</code>).</li>
+        </ul>
+
+        <p class="mp-mini-h">▸ Atajos de CLI (saltean la UI)</p>
+        <pre class="mp-code"><code>{`# Instalar (default: scope User)
+/plugin install <plugin>@<marketplace>
+
+# Gestionar
+/plugin disable <plugin>@<marketplace>
+/plugin enable  <plugin>@<marketplace>
+/plugin uninstall <plugin>@<marketplace>
+
+# Toma cambios mid-session, sin restart
+/reload-plugins
+
+# Atajos: /plugin market === /plugin marketplace; rm === remove`}</code></pre>
+
+        <p class="mp-gotcha"><b>Trampa</b> — <code>/reload-plugins</code> es el comando más olvidado. Si instalaste un plugin y sus skills no aparecen, casi siempre solo necesitabas recargar. Después del reload, el output muestra conteos de plugins, skills, agents, hooks, MCP servers y LSP servers — confirma que las contribuciones del nuevo plugin aparecen.</p>
+      </section>
+
+      <!-- ===== §2 scopes ===== -->
+
+      <section class="mp-mod mp-fam-magenta" id="m2">
+        <header class="mp-mod-head">
+          <span class="mp-mod-n">§2</span>
+          <h2 class="mp-mod-h">Tres scopes de instalación — elige con intención</h2>
+        </header>
+
+        <table class="mp-table">
+          <thead><tr><th>Scope</th><th>Quién</th><th>Dónde vive</th><th>Úsalo cuando…</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>user</code> <em>(default)</em></td>
+              <td>Tú, en todo proyecto</td>
+              <td><code>~/.claude/settings.json</code></td>
+              <td>Lo usarías en todo lugar — <code>commit-commands</code>, <code>github</code>, un LSP de tu lenguaje diario.</td>
+            </tr>
+            <tr>
+              <td><code>project</code></td>
+              <td>Tú + todo colaborador en este repo</td>
+              <td><code>.claude/settings.json</code> (rastreado por git)</td>
+              <td>El plugin es parte del contrato del proyecto — un agente de code-review que todo el equipo debe correr, una política de hooks.</td>
+            </tr>
+            <tr>
+              <td><code>local</code></td>
+              <td>Tú, solo en este repo</td>
+              <td><code>.claude/settings.local.json</code> (gitignored)</td>
+              <td>Experimentando; aún no listo para bendecirlo para el equipo; tu stack de observabilidad personal.</td>
+            </tr>
+            <tr>
+              <td><code>managed</code></td>
+              <td>Admin de la org lo impulsó</td>
+              <td>Archivo de settings administrado</td>
+              <td>Read-only desde tu lado. Lo ves; no puedes deshabilitarlo.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p class="mp-mini-h">▸ Flag de scope en CLI (saltea el picker)</p>
+        <pre class="mp-code"><code>{`claude plugin install formatter@your-org --scope project
+claude plugin uninstall formatter@your-org --scope project`}</code></pre>
+
+        <p class="mp-gotcha"><b>Trampa</b> — instalar en scope <code>user</code> (el default) significa que el plugin está activo en <i>cada</i> repo que abres. Si el plugin agrega un hook agresivo o un output style, se cuela en proyectos donde no lo querías. Ante la duda, instala en <code>local</code> primero, valida, después promueve.</p>
+      </section>
+
+      <!-- ===== §3 claude-code-setup ===== -->
+
+      <section class="mp-mod mp-fam-cyan" id="m3">
+        <header class="mp-mod-head">
+          <span class="mp-mod-n">§3</span>
+          <h2 class="mp-mod-h">El punto de entrada canónico — <code>claude-code-setup</code></h2>
+        </header>
+        <p class="mp-mod-when"><b>Por qué</b> — enfrentarse a un marketplace de 200+ plugins no es donde quieres empezar. <code>claude-code-setup</code> es un único skill read-only, publicado por Anthropic, que escanea tu codebase y recomienda las 1-2 mejores automatizaciones por categoría. Es la primitiva de bootstrap para cualquier repo existente adoptando Claude Code.</p>
+
+        <p class="mp-mini-h">▸ Instalar</p>
+        <pre class="mp-code"><code>{`/plugin install claude-code-setup@claude-plugins-official
+/reload-plugins`}</code></pre>
+
+        <p class="mp-mini-h">▸ Usar — cualquiera de estos prompts lo dispara</p>
+        <pre class="mp-code"><code>{`"recommend automations for this project"
+"help me set up Claude Code"
+"what hooks should I use?"`}</code></pre>
+
+        <p class="mp-mini-h">▸ Qué recomienda, por categoría</p>
+        <ul class="mp-mod-list">
+          <li><b>MCP Servers</b> — integraciones externas (ej: <code>context7</code> para lookup de docs, Playwright MCP para automatización frontend).</li>
+          <li><b>Skills</b> — expertise empaquetada (ej: skill Plan para trabajo spec-driven, <code>frontend-design</code>).</li>
+          <li><b>Hooks</b> — acciones automáticas (auto-format al editar, auto-lint, bloquear caminos sensibles).</li>
+          <li><b>Subagents</b> — revisores especializados (seguridad, performance, accesibilidad).</li>
+          <li><b>Slash commands</b> — flujos rápidos (<code>/test</code>, <code>/pr-review</code>, <code>/explain</code>).</li>
+        </ul>
+
+        <p class="mp-gotcha"><b>Seguridad</b> — el skill es <b>read-only</b>. Analiza, no instala. Después de que llega la recomendación, <i>tú</i> decides qué plugins instalar y en qué scope. Trata el output como punto de partida para <code>/plugin install</code>, no como verdad absoluta — la recomendación refleja lo que el skill vio, no necesariamente lo que tu proyecto necesita a largo plazo.</p>
+      </section>
+
+      <!-- ===== §4 el catálogo ===== -->
+
+      <section class="mp-mod mp-fam-green" id="m4">
+        <header class="mp-mod-head">
+          <span class="mp-mod-n">§4</span>
+          <h2 class="mp-mod-h">14 plugins que vale la pena conocer — curados</h2>
+        </header>
+        <p class="mp-mod-when"><b>Cómo leer esto</b> — el marketplace tiene 200+ plugins y se mueve rápido. Los 14 de abajo fueron elegidos por amplitud (uno o dos por categoría) y permanencia (construidos o auspiciados por mantenedores upstream estables). Para el catálogo en vivo, corre <code>/plugin</code> y ve a <b>Discover</b>, o visita <a href="https://claude.com/plugins" target="_blank" rel="noopener">claude.com/plugins</a>.</p>
+
+        <nav class="mp-filters" aria-label="Filtrar por categoría">
+          <span class="mp-filter-h">▸ FILTRAR POR CATEGORÍA</span>
+          <button type="button" class="mp-filter mp-filter-all" data-cat="all" aria-pressed="true">todo ({plugins.length})</button>
+          {Object.entries(categories).map(([key, meta]) => {
+            const count = plugins.filter((p) => p.cat === key).length;
+            return (
+              <button type="button" class={`mp-filter mp-filter-${meta.color}`} data-cat={key} aria-pressed="false">
+                {meta.label} ({count})
+              </button>
+            );
+          })}
+        </nav>
+
+        <div class="mp-grid">
+          {plugins.map((p) => {
+            const meta = categories[p.cat];
+            return (
+              <article class={`mp-card mp-fam-${meta.color}`} data-cat={p.cat}>
+                <header class="mp-card-head">
+                  <span class="mp-card-n">#{p.n}</span>
+                  <h3 class="mp-card-h">{p.title}</h3>
+                  <span class="mp-card-cat">{meta.label}</span>
+                </header>
+                <p class="mp-card-desc">{p.oneLine}</p>
+                <pre class="mp-card-install"><code>/plugin install {p.install}</code></pre>
+              </article>
+            );
+          })}
+        </div>
+
+        <p class="mp-gotcha"><b>Trampa</b> — los plugins LSP requieren el <i>binario</i> del language server en tu <code>$PATH</code> (ej: <code>typescript-language-server</code>, <code>pyright-langserver</code>, <code>rust-analyzer</code>). Si la pestaña Errors de <code>/plugin</code> muestra <code>Executable not found in $PATH</code>, el plugin se instaló correctamente — solo necesitas instalar el binario hermano vía tu gestor de paquetes (<code>brew</code>, <code>npm</code>, <code>cargo</code>, paquete del sistema).</p>
+      </section>
+
+      <!-- ===== §5 marketplaces de terceros ===== -->
+
+      <section class="mp-mod mp-fam-violet" id="m5">
+        <header class="mp-mod-head">
+          <span class="mp-mod-n">§5</span>
+          <h2 class="mp-mod-h">Agregar marketplaces de terceros</h2>
+        </header>
+        <p class="mp-mod-when"><b>Cuándo</b> — tu equipo tiene un catálogo privado de plugins, quieres probar un marketplace comunitario, o estás probando un marketplace que estás construyendo. El oficial viene preinstalado; todo lo demás necesita un <code>add</code> explícito.</p>
+
+        <p class="mp-mini-h">▸ Desde un repo de GitHub (lo más común)</p>
+        <pre class="mp-code"><code>{`/plugin marketplace add owner/repo
+
+# Marketplace demo de Anthropic (separado del oficial)
+/plugin marketplace add anthropics/claude-code`}</code></pre>
+
+        <p class="mp-mini-h">▸ Desde cualquier host Git (incluye el sufijo .git)</p>
+        <pre class="mp-code"><code>{`/plugin marketplace add https://gitlab.com/company/plugins.git
+/plugin marketplace add git@gitlab.com:company/plugins.git
+
+# Pinea a una rama o tag específica
+/plugin marketplace add https://gitlab.com/company/plugins.git#v1.0.0`}</code></pre>
+
+        <p class="mp-mini-h">▸ Desde una ruta local o URL remota</p>
+        <pre class="mp-code"><code>{`/plugin marketplace add ./my-marketplace
+/plugin marketplace add ./path/to/marketplace.json
+/plugin marketplace add https://example.com/marketplace.json`}</code></pre>
+
+        <p class="mp-mini-h">▸ Gestiona el conjunto registrado</p>
+        <pre class="mp-code"><code>{`/plugin marketplace list
+/plugin marketplace update <name>
+/plugin marketplace remove <name>     # desinstala todo plugin que vino de él!`}</code></pre>
+
+        <p class="mp-gotcha"><b>Trampa</b> — <code>marketplace remove</code> es destructivo. Remover un marketplace desinstala todo plugin que sacaste de él. Si solo quieres parar las auto-actualizaciones, deshabilita el toggle de auto-update en la pestaña Marketplaces.</p>
+      </section>
+
+      <!-- ===== §6 team marketplaces ===== -->
+
+      <section class="mp-mod mp-fam-yellow" id="m6">
+        <header class="mp-mod-head">
+          <span class="mp-mod-n">§6</span>
+          <h2 class="mp-mod-h">Marketplaces de equipo — auto-prompt al confiar en el repo</h2>
+        </header>
+        <p class="mp-mod-when"><b>Cuándo</b> — el equipo tiene un catálogo compartido de plugins y quieres que los nuevos contribuyentes lo instalen sin fricción de onboarding. Declarado en <code>.claude/settings.json</code>, preguntado en la primera confianza del repo.</p>
+
+        <p class="mp-mini-h">▸ <code>.claude/settings.json</code></p>
+        <pre class="mp-code"><code>{`{
+  "extraKnownMarketplaces": {
+    "my-team-tools": {
+      "source": {
+        "source": "github",
+        "repo": "your-org/claude-plugins"
+      }
+    }
+  }
+}`}</code></pre>
+
+        <p class="mp-mod-when">Cuando un compañero abre el repo por primera vez y le da confianza, Claude Code le pregunta si quiere instalar los marketplaces listados y cualquier <code>enabledPlugins</code> declarado al lado. Acepta o saltea; el repo no fuerza.</p>
+
+        <p class="mp-gotcha"><b>Trampa</b> — los marketplaces de terceros y de dev local vienen con <b>auto-update deshabilitado</b> por default (solo los marketplaces oficiales de Anthropic se auto-actualizan). Los admins pueden flipear <code>"autoUpdate": true</code> por entrada en las managed settings si la org quiere refreshes forzados. Para la mayoría de los equipos, <code>/plugin marketplace update</code> manual en puntos estables conocidos es más sano que updates silenciosos.</p>
+      </section>
+
+      <!-- ===== §7 seguridad ===== -->
+
+      <section class="mp-mod mp-fam-orange" id="m7">
+        <header class="mp-mod-head">
+          <span class="mp-mod-n">§7</span>
+          <h2 class="mp-mod-h">El modelo de seguridad — gánate la confianza</h2>
+        </header>
+        <p class="mp-mod-when"><b>Qué está en juego</b> — los plugins y marketplaces ejecutan código arbitrario con <i>tus</i> privilegios de usuario. Un plugin puede correr shell, leer tus archivos, golpear la red, modificar tu entorno. Anthropic no audita el código de los plugins; el sello <code>claude-plugins-official</code> significa que Anthropic cura el catálogo, no que el runtime esté sandboxed.</p>
+
+        <ul class="mp-mod-list">
+          <li><b>Confía en la fuente primero</b> — chequea el repo del plugin por el link de homepage. Lee qué hooks instala, qué MCP servers levanta, qué permisos espera.</li>
+          <li><b>Prefiere scope estrecho</b> — empieza en <code>local</code> para cualquier cosa que no leíste, promueve a <code>project</code> o <code>user</code> solo después de validar en una sesión real.</li>
+          <li><b>Pinea marketplaces que no son tuyos</b> — para marketplaces de terceros basados en Git, agrega <code>#</code>{`<sha-o-tag>`} para fijar la versión en lugar de seguir <code>main</code>.</li>
+          <li><b>Control de org</b> — los admins pueden restringir qué marketplaces son agregables vía managed settings (<code>extraKnownMarketplaces</code> con deny list). Vale configurarlo antes de que un equipo pase de cinco personas.</li>
+        </ul>
+
+        <p class="mp-mini-h">▸ El reflejo de auditoría en dos líneas</p>
+        <pre class="mp-code"><code>{`# 1. Dónde vive el plugin? (lee esto antes de instalar)
+gh repo view <owner>/<repo> --json url,description,homepageUrl
+
+# 2. Qué hooks / commands / MCP trae? (mira dentro de .claude-plugin/)
+gh repo clone <owner>/<repo> && grep -RIn 'hook\\|command\\|mcpServers' .claude-plugin/`}</code></pre>
+
+        <p class="mp-gotcha"><b>Trampa</b> — los marketplaces oficiales se auto-actualizan por default. Hasta los oficiales pueden lanzar una mala release, así que si una sesión se rompe después de una notificación de startup ("plugins actualizados"), chequea <code>/plugin</code> → Marketplaces → desactiva el auto-update de la entrada sospechosa, después bisecta. <code>FORCE_AUTOUPDATE_PLUGINS=1</code> + <code>DISABLE_AUTOUPDATER=1</code> mantiene los updates de plugin mientras pinea la CLI en sí — útil cuando estabilizaste un workflow.</p>
+      </section>
+
+      <!-- ===== §8 troubleshooting ===== -->
+
+      <section class="mp-mod mp-fam-cyan" id="m8">
+        <header class="mp-mod-head">
+          <span class="mp-mod-n">§8</span>
+          <h2 class="mp-mod-h">Troubleshooting — los cuatro modos reales de falla</h2>
+        </header>
+
+        <ul class="mp-mod-list">
+          <li><b><code>/plugin command not recognized</code></b> — Claude Code está demasiado viejo. Chequea <code>claude --version</code>; actualiza vía <code>brew upgrade claude-code</code>, <code>npm install -g @anthropic-ai/claude-code@latest</code>, o re-corre el instalador nativo. Reinicia el terminal.</li>
+          <li><b><code>not found in any marketplace</code></b> — el dato del marketplace está rancio. Corre <code>/plugin marketplace update claude-plugins-official</code> (o el que sea). Si falla, <code>/plugin marketplace add anthropics/claude-plugins-official</code> para re-registrar, después reintenta la instalación.</li>
+          <li><b>Las skills del plugin no aparecen</b> — usualmente es un reload faltante. Corre <code>/reload-plugins</code>. Si sigue ausente, limpia el cache: <code>rm -rf ~/.claude/plugins/cache</code>, reinicia, reinstala.</li>
+          <li><b><code>Executable not found in $PATH</code></b> en la pestaña Errors — plugin LSP instalado, binario del language server faltando. Instala el binario vía tu gestor de paquetes (según la tabla de Code intelligence en el doc oficial).</li>
+        </ul>
+      </section>
+
+      <!-- ===== closer ===== -->
+
+      <section class="mp-closer">
+        <h2 class="mp-closer-h">Dónde encaja esto con el resto de claude-core</h2>
+        <p>
+          El marketplace es la <b>capa de descubrimiento</b>. Las otras surfaces de este sitio enseñan las <i>primitivas</i> sobre las que se construyen los plugins:
+        </p>
+        <ul class="mp-closer-ul">
+          <li>El <a href={`${base}/cheatsheet/es/claude-core/`}>Cheatsheet</a> es la referencia densa — cada flag de CLI y hook event que usan los plugins.</li>
+          <li>La <a href={`${base}/masterclass/es/claude-code/`}>Master Class</a> camina el sendero lineal para que tengas modelo mental antes de adoptar plugins.</li>
+          <li>El <a href={`${base}/cookbook/es/hooks/`}>Hook Cookbook</a> muestra cómo se ve un hook de verdad, así puedes leer lo que hacen los hooks de un plugin (o escribir los tuyos).</li>
+          <li>La <a href={`${base}/masterclass/es/goal-command/`}>/goal Class</a> cubre el patrón worker/evaluator que plugins como <code>code-review</code> instancian.</li>
+          <li>La <a href={`${base}/masterclass/es/routing/`}>Routing Class</a> cubre extender la capa de modelo — la misma forma arquitectónica de extender la capa de agente vía plugins.</li>
+        </ul>
+        <p>
+          Los plugins son cómo el ecosistema empaqueta expertise; las primitivas son cómo lees lo que hicieron y personalizas. Ambas direcciones importan.
+        </p>
+      </section>
+
+      <footer class="mp-foot">
+        <p class="mp-foot-meta">
+          Construido contra Claude Code <code>v{CC_VERSION}</code>. El catálogo del marketplace se mueve rápido — los comandos de instalación y nombres de plugin son estables; la lista curada de arriba es un snapshot, no un contrato. Código en <a href={REPO_URL} target="_blank" rel="noopener">github/cfpperche/claude-core</a>. Última revisión: 2026-05-18.
+        </p>
+      </footer>
+
+    </main>
+
+    <script>
+      const printBtn = document.getElementById("mp-print");
+      if (printBtn) printBtn.addEventListener("click", () => window.print());
+
+      const filters = document.querySelectorAll<HTMLButtonElement>(".mp-filter");
+      const cards = document.querySelectorAll<HTMLElement>(".mp-card");
+      filters.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const cat = btn.dataset.cat || "all";
+          filters.forEach((b) => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
+          cards.forEach((c) => {
+            const show = cat === "all" || c.dataset.cat === cat;
+            c.style.display = show ? "" : "none";
+          });
+        });
+      });
+    </script>
+
+    <style is:global>
+      :root[data-theme="poster"] {
+        --p-bg: #0a0e1f;
+        --p-bg-2: #0e1530;
+        --p-ink: #e5e7eb;
+        --p-ink-dim: #9ca3af;
+        --p-ink-faint: #6b7280;
+        --p-green: #39ff14;
+        --p-orange: #ff9933;
+        --p-red: #ff4d4d;
+        --p-cyan: #00e5ff;
+        --p-magenta: #ff44ff;
+        --p-violet: #a78bfa;
+        --p-yellow: #ffe066;
+        --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+      }
+      html, body { background: var(--p-bg); color: var(--p-ink); overflow-x: clip; }
+
+      .mp-body { font-family: var(--font-sans); margin: 0; background: radial-gradient(ellipse at top, var(--p-bg-2), var(--p-bg) 70%); min-height: 100vh; padding: 24px 24px 60px; overflow-wrap: anywhere; max-width: 100%; }
+
+      .mp-top { max-width: 1100px; margin: 0 auto 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-family: var(--font-mono); font-size: 11px; }
+      .mp-back { color: var(--p-orange); text-decoration: none; letter-spacing: 0.06em; text-transform: lowercase; }
+      .mp-back:hover { color: var(--p-yellow); }
+      .mp-top-tools { display: flex; align-items: center; gap: 10px; }
+      .mp-tool-btn { font-family: var(--font-mono); font-size: 11px; background: transparent; border: 1px solid rgba(255, 153, 51, 0.35); color: var(--p-orange); padding: 4px 10px; cursor: pointer; letter-spacing: 0.06em; border-radius: 2px; }
+      .mp-tool-btn:hover { color: var(--p-yellow); border-color: var(--p-orange); }
+
+      .mp-page { max-width: 1100px; margin: 0 auto; }
+
+      .mp-banner { text-align: center; margin-bottom: 32px; }
+      .mp-strip { font-family: var(--font-mono); font-size: 11px; color: var(--p-orange); letter-spacing: 0.12em; margin-bottom: 14px; display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; }
+      .mp-tag { white-space: nowrap; }
+      .mp-title { font-family: var(--font-mono); font-size: 52px; font-weight: 800; letter-spacing: -0.02em; margin: 8px 0 16px; line-height: 1; }
+      .mp-title-line { display: block; color: var(--p-ink); }
+      .mp-title-accent { color: var(--p-orange); }
+      .mp-sub { color: var(--p-ink-dim); font-size: 14.5px; margin: 0 auto; max-width: 760px; line-height: 1.6; }
+      .mp-sub code { color: var(--p-orange); font-family: var(--font-mono); font-size: 12.5px; }
+      @media (max-width: 720px) { .mp-title { font-size: 32px; } .mp-strip { font-size: 9.5px; gap: 10px; } }
+
+      .mp-intro { background: rgba(0, 0, 0, 0.3); border-left: 3px solid var(--p-orange); border-radius: 2px; padding: 18px 22px; margin-bottom: 30px; font-size: 14px; line-height: 1.65; }
+      .mp-intro-h { font-family: var(--font-mono); font-size: 12px; color: var(--p-orange); letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 10px; }
+      .mp-intro-h + .mp-intro-h { margin-top: 16px; }
+      .mp-intro p { margin: 0 0 8px; color: var(--p-ink); }
+      .mp-intro p:last-child { margin-bottom: 0; }
+      .mp-intro-ol { margin: 6px 0 8px; padding-left: 22px; color: var(--p-ink); }
+      .mp-intro-ol li { margin-bottom: 4px; }
+      .mp-intro-note { color: var(--p-ink-dim); font-size: 13px; }
+      .mp-intro code { color: var(--p-orange); font-family: var(--font-mono); font-size: 12.5px; }
+
+      .mp-mod { background: rgba(0, 0, 0, 0.28); border: 1px solid rgba(255, 255, 255, 0.06); border-left: 3px solid var(--mp-c, var(--p-orange)); border-radius: 3px; padding: 20px 24px; margin-bottom: 22px; }
+      .mp-fam-orange  { --mp-c: var(--p-orange); }
+      .mp-fam-magenta { --mp-c: var(--p-magenta); }
+      .mp-fam-cyan    { --mp-c: var(--p-cyan); }
+      .mp-fam-green   { --mp-c: var(--p-green); }
+      .mp-fam-yellow  { --mp-c: var(--p-yellow); }
+      .mp-fam-violet  { --mp-c: var(--p-violet); }
+
+      .mp-mod-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+      .mp-mod-n { font-family: var(--font-mono); font-size: 14px; font-weight: 800; color: var(--mp-c, var(--p-orange)); letter-spacing: 0.04em; }
+      .mp-mod-h { font-family: var(--font-mono); font-size: 19px; font-weight: 700; color: var(--p-ink); margin: 0; letter-spacing: -0.005em; }
+      .mp-mod-h code { color: var(--mp-c, var(--p-orange)); font-family: var(--font-mono); }
+      .mp-mod-when { font-size: 14px; line-height: 1.6; color: var(--p-ink); margin: 0 0 12px; }
+      .mp-mod-when code { color: var(--p-orange); font-family: var(--font-mono); font-size: 12.5px; }
+      .mp-mod-when b { color: var(--mp-c, var(--p-orange)); }
+
+      .mp-mod-list { margin: 6px 0 10px; padding-left: 22px; color: var(--p-ink); font-size: 13.5px; line-height: 1.65; }
+      .mp-mod-list li { margin-bottom: 6px; }
+      .mp-mod-list code { color: var(--p-orange); font-family: var(--font-mono); font-size: 12.5px; }
+      .mp-mod-list b { color: var(--mp-c, var(--p-orange)); }
+      .mp-mod-list kbd { font-family: var(--font-mono); font-size: 11px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 3px; padding: 1px 5px; color: var(--p-ink); }
+
+      .mp-mini-h { font-family: var(--font-mono); font-size: 11.5px; color: var(--mp-c, var(--p-orange)); letter-spacing: 0.04em; margin: 14px 0 6px; }
+
+      .mp-code { background: rgba(0, 0, 0, 0.55); border-left: 2px solid var(--mp-c, var(--p-orange)); padding: 10px 14px; margin: 4px 0 8px; font-size: 12.5px; line-height: 1.55; overflow-x: auto; font-family: var(--font-mono); color: var(--p-ink); border-radius: 2px; max-width: 100%; white-space: pre; }
+      .mp-code code { font-family: inherit; font-size: inherit; color: inherit; }
+
+      .mp-gotcha { background: rgba(255, 153, 51, 0.07); border-left: 2px solid var(--p-orange); padding: 8px 12px; margin: 10px 0 0; font-size: 13px; line-height: 1.55; color: var(--p-ink); border-radius: 2px; }
+      .mp-gotcha b { color: var(--p-orange); }
+      .mp-gotcha code { color: var(--p-orange); font-family: var(--font-mono); font-size: 12.5px; }
+
+      .mp-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0 6px; }
+      .mp-table th, .mp-table td { text-align: left; padding: 7px 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.07); vertical-align: top; }
+      .mp-table th { font-family: var(--font-mono); font-size: 11px; color: var(--p-magenta); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+      .mp-table code { font-family: var(--font-mono); font-size: 12.5px; color: var(--p-magenta); }
+      .mp-table em { color: var(--p-ink-dim); font-style: normal; font-size: 12px; }
+
+      .mp-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0 14px; }
+      .mp-filter-h { font-family: var(--font-mono); font-size: 11px; color: var(--p-ink-faint); letter-spacing: 0.06em; margin-right: 4px; }
+      .mp-filter { font-family: var(--font-mono); font-size: 11px; background: transparent; border: 1px solid rgba(255, 255, 255, 0.14); color: var(--p-ink); padding: 3px 9px; cursor: pointer; letter-spacing: 0.04em; border-radius: 2px; }
+      .mp-filter[aria-pressed="true"] { background: rgba(255, 153, 51, 0.1); border-color: var(--p-orange); color: var(--p-orange); }
+      .mp-filter-all[aria-pressed="true"]     { background: rgba(255, 255, 255, 0.08); border-color: var(--p-ink); color: var(--p-ink); }
+      .mp-filter-orange[aria-pressed="true"]  { background: rgba(255, 153, 51, 0.1); border-color: var(--p-orange);  color: var(--p-orange); }
+      .mp-filter-magenta[aria-pressed="true"] { background: rgba(255, 68, 255, 0.1);  border-color: var(--p-magenta); color: var(--p-magenta); }
+      .mp-filter-cyan[aria-pressed="true"]    { background: rgba(0, 229, 255, 0.1);   border-color: var(--p-cyan);    color: var(--p-cyan); }
+      .mp-filter-green[aria-pressed="true"]   { background: rgba(57, 255, 20, 0.1);   border-color: var(--p-green);   color: var(--p-green); }
+      .mp-filter-yellow[aria-pressed="true"]  { background: rgba(255, 224, 102, 0.1); border-color: var(--p-yellow);  color: var(--p-yellow); }
+      .mp-filter-violet[aria-pressed="true"]  { background: rgba(167, 139, 250, 0.1); border-color: var(--p-violet);  color: var(--p-violet); }
+
+      .mp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 4px 0 10px; }
+      @media (max-width: 720px) { .mp-grid { grid-template-columns: 1fr; } }
+      .mp-card { background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.07); border-left: 3px solid var(--mp-c, var(--p-orange)); border-radius: 3px; padding: 12px 14px; }
+      .mp-card-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+      .mp-card-n { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--mp-c, var(--p-orange)); letter-spacing: 0.04em; min-width: 22px; }
+      .mp-card-h { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--p-ink); margin: 0; flex: 1; }
+      .mp-card-cat { font-family: var(--font-mono); font-size: 10px; color: var(--p-ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
+      .mp-card-desc { font-size: 13px; line-height: 1.55; color: var(--p-ink); margin: 4px 0 8px; }
+      .mp-card-install { background: rgba(0, 0, 0, 0.55); border-left: 2px solid var(--mp-c, var(--p-orange)); padding: 6px 10px; margin: 0; font-size: 12px; line-height: 1.4; overflow-x: auto; font-family: var(--font-mono); color: var(--p-ink); border-radius: 2px; white-space: pre; }
+
+      .mp-closer { background: rgba(0, 0, 0, 0.3); border-left: 3px solid var(--p-orange); border-radius: 2px; padding: 18px 22px; margin-top: 26px; font-size: 14px; line-height: 1.65; }
+      .mp-closer-h { font-family: var(--font-mono); font-size: 12px; color: var(--p-orange); letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 10px; }
+      .mp-closer p { margin: 0 0 10px; color: var(--p-ink); }
+      .mp-closer p:last-child { margin-bottom: 0; }
+      .mp-closer code { color: var(--p-orange); font-family: var(--font-mono); font-size: 12.5px; }
+      .mp-closer-ul { margin: 6px 0 10px; padding-left: 22px; color: var(--p-ink); }
+      .mp-closer-ul li { margin-bottom: 5px; }
+      .mp-closer a { color: var(--p-cyan); text-decoration: none; border-bottom: 1px dashed transparent; }
+      .mp-closer a:hover { border-bottom-color: var(--p-cyan); }
+
+      .mp-foot { text-align: center; margin-top: 30px; padding-top: 18px; border-top: 1px solid rgba(255, 255, 255, 0.06); }
+      .mp-foot-meta { font-family: var(--font-mono); font-size: 11.5px; color: var(--p-ink-faint); margin: 0; }
+      .mp-foot-meta code { color: var(--p-orange); }
+      .mp-foot-meta a { color: var(--p-cyan); text-decoration: none; }
+      .mp-foot-meta a:hover { text-decoration: underline; }
+
+      @media print {
+        .mp-top, .mp-filters { display: none !important; }
+        .mp-body { padding: 0; }
+        .mp-mod, .mp-card { break-inside: avoid; }
+      }
+    </style>
+  </body>
+</html>

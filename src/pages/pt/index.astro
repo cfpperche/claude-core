@@ -7,7 +7,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const siteUrl = "https://cfpperche.github.io";
 const CC_VERSION = "2.1.143";
 const pageTitle = `claude-core · Aprenda Claude Code`;
-const pageDesc = `Cinco recursos gratuitos pra aprender Claude Code v${CC_VERSION}: cheatsheet denso, Master Class de 12 módulos, deep dive em 8 módulos do comando /goal, Hook Cookbook com 10 receitas, e uma Routing Class cobrindo CCRouter (estendendo a camada de modelo).`;
+const pageDesc = `Seis recursos gratuitos pra aprender Claude Code v${CC_VERSION}: cheatsheet denso, Master Class de 12 módulos, deep dive em 8 módulos do comando /goal, Hook Cookbook com 10 receitas, Routing Class cobrindo CCRouter, e uma surface Marketplace curando o catálogo oficial de plugins.`;
 ---
 
 <!doctype html>
@@ -42,14 +42,14 @@ const pageDesc = `Cinco recursos gratuitos pra aprender Claude Code v${CC_VERSIO
         <div class="ix-strip">
           <span class="ix-tag">▮ CLAUDE-CORE</span>
           <span class="ix-tag">CLAUDE CODE v{CC_VERSION}</span>
-          <span class="ix-tag">CINCO RECURSOS GRATUITOS ▮</span>
+          <span class="ix-tag">SEIS RECURSOS GRATUITOS ▮</span>
         </div>
         <h1 class="ix-title">
           <span class="ix-title-line">UMA BASE</span>
           <span class="ix-title-line ix-title-accent">PRA APRENDER CLAUDE CODE</span>
         </h1>
         <p class="ix-sub">
-          Cinco recursos gratuitos pra ir fundo no agente de código nativo de terminal da Anthropic. Escolhe pelo seu momento — referência, tour guiado, deep dives ou receitas copy-paste.
+          Seis recursos gratuitos pra ir fundo no agente de código nativo de terminal da Anthropic. Escolhe pelo seu momento — referência, tour guiado, deep dives, receitas copy-paste ou o mapa do ecossistema.
         </p>
       </header>
 
@@ -125,12 +125,26 @@ const pageDesc = `Cinco recursos gratuitos pra aprender Claude Code v${CC_VERSIO
           </div>
         </a>
 
+        <a href={`${base}/marketplace/pt/plugins/`} class="ix-card ix-card-orange">
+          <div class="ix-card-head">
+            <span class="ix-card-n">05</span>
+            <h2 class="ix-card-h">Marketplace</h2>
+            <span class="ix-card-arr" aria-hidden="true">↗</span>
+          </div>
+          <p class="ix-card-desc">
+            O marketplace oficial de plugins da Anthropic — UX do <code>/plugin</code>, três escopos de instalação, <code>claude-code-setup</code> como bootstrap canônico, 14 escolhas curadas em 6 categorias, marketplaces de terceiros, modelo de segurança.
+          </p>
+          <div class="ix-card-meta">
+            <span>14 plugins</span><span>·</span><span>6 categorias</span><span>·</span><span>imprimível</span>
+          </div>
+        </a>
+
       </section>
 
       <section class="ix-about">
         <h2 class="ix-about-h">O que é isso</h2>
         <p>
-          Cinco recursos standalone, desenhados pra compor. O cheatsheet é a referência densa — sempre a um Ctrl+F de distância. A Master Class é o caminho linear pra quem tá começando. O /goal Class, o Hook Cookbook e a Routing Class são imersões em superfícies específicas. Toda página tem um dropdown <code>Recursos ▾</code> pra você pular entre elas a qualquer momento.
+          Seis recursos standalone, desenhados pra compor. O cheatsheet é a referência densa — sempre a um Ctrl+F de distância. A Master Class é o caminho linear pra quem tá começando. O /goal Class, o Hook Cookbook e a Routing Class são imersões em superfícies específicas. O Marketplace é o mapa do ecossistema — plugins, escopos, bootstrap, segurança. Toda página tem um dropdown <code>Recursos ▾</code> pra você pular entre elas a qualquer momento.
         </p>
         <p>
           Tudo é HTML estático. Sem tracking, sem analytics, sem framework JS. Construído com Astro, hospedado no GitHub Pages. Código em <a href={REPO_URL} target="_blank" rel="noopener">github/cfpperche/claude-core</a>. Licença MIT — clona, adapta, lança a sua versão.
@@ -250,6 +264,7 @@ const pageDesc = `Cinco recursos gratuitos pra aprender Claude Code v${CC_VERSIO
       .ix-card-cyan    { --ix-c: var(--p-cyan); }
       .ix-card-yellow  { --ix-c: var(--p-yellow); }
       .ix-card-violet  { --ix-c: var(--p-violet); }
+      .ix-card-orange  { --ix-c: var(--p-orange); }
 
       .ix-card-head {
         display: flex;

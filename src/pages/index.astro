@@ -7,7 +7,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const siteUrl = "https://cfpperche.github.io";
 const CC_VERSION = "2.1.143";
 const pageTitle = `claude-core · A learning surface for Claude Code`;
-const pageDesc = `Five free learning surfaces for Claude Code v${CC_VERSION}: a dense cheatsheet, a 12-module Master Class, an 8-module deep dive on /goal, a Hook Cookbook with 10 recipes, and a Routing Class covering CCRouter (extend the model layer).`;
+const pageDesc = `Six free learning surfaces for Claude Code v${CC_VERSION}: a dense cheatsheet, a 12-module Master Class, an 8-module deep dive on /goal, a Hook Cookbook with 10 recipes, a Routing Class covering CCRouter, and a Marketplace surface curating the official plugin catalog.`;
 ---
 
 <!doctype html>
@@ -41,14 +41,14 @@ const pageDesc = `Five free learning surfaces for Claude Code v${CC_VERSION}: a 
         <div class="ix-strip">
           <span class="ix-tag">▮ CLAUDE-CORE</span>
           <span class="ix-tag">CLAUDE CODE v{CC_VERSION}</span>
-          <span class="ix-tag">FIVE FREE SURFACES ▮</span>
+          <span class="ix-tag">SIX FREE SURFACES ▮</span>
         </div>
         <h1 class="ix-title">
           <span class="ix-title-line">A LEARNING SURFACE</span>
           <span class="ix-title-line ix-title-accent">FOR CLAUDE CODE</span>
         </h1>
         <p class="ix-sub">
-          Five free resources for getting deep on Anthropic's terminal-native coding agent. Pick by where you are — reference, guided walkthrough, deep dives, or copy-paste recipes.
+          Six free resources for getting deep on Anthropic's terminal-native coding agent. Pick by where you are — reference, guided walkthrough, deep dives, copy-paste recipes, or the ecosystem map.
         </p>
       </header>
 
@@ -121,6 +121,20 @@ const pageDesc = `Five free learning surfaces for Claude Code v${CC_VERSION}: a 
           </p>
           <div class="ix-card-meta">
             <span>4 mods + 8 recipes</span><span>·</span><span>~25 min</span><span>·</span><span>printable</span>
+          </div>
+        </a>
+
+        <a href={`${base}/marketplace/plugins/`} class="ix-card ix-card-orange">
+          <div class="ix-card-head">
+            <span class="ix-card-n">05</span>
+            <h2 class="ix-card-h">Marketplace</h2>
+            <span class="ix-card-arr" aria-hidden="true">↗</span>
+          </div>
+          <p class="ix-card-desc">
+            The official Anthropic plugin marketplace — <code>/plugin</code> UX, three install scopes, <code>claude-code-setup</code> as the canonical bootstrap, 14 curated picks across 6 categories, third-party marketplaces, security model.
+          </p>
+          <div class="ix-card-meta">
+            <span>14 plugins</span><span>·</span><span>6 categories</span><span>·</span><span>printable</span>
           </div>
         </a>
 
@@ -249,6 +263,7 @@ const pageDesc = `Five free learning surfaces for Claude Code v${CC_VERSION}: a 
       .ix-card-cyan    { --ix-c: var(--p-cyan); }
       .ix-card-yellow  { --ix-c: var(--p-yellow); }
       .ix-card-violet  { --ix-c: var(--p-violet); }
+      .ix-card-orange  { --ix-c: var(--p-orange); }
 
       .ix-card-head {
         display: flex;
